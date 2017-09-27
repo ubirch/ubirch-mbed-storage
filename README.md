@@ -24,7 +24,6 @@ the flash memory of the MCU.
 
 ```bash
 mbed new .
-# possibly fix mbed-os.lib!
 mbed target NRF52_DK
 mbed toolchain GCC_ARM
 mbed test -n tests-storage-nrf52*
