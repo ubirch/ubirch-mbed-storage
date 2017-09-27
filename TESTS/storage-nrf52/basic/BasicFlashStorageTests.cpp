@@ -146,7 +146,7 @@ void TestStorageWriteFailOnUsedFlash() {
                              "failed to read from storage");
     TEST_ASSERT_EQUAL_HEX32_MESSAGE(writeData, readData, "data read does not match written data");
 
-    // TODO: apparently, the 1 bis not yet zero will be zeroes by the second write
+    // TODO: apparently, the 1 bits not yet zero will be zeroes by the second write
 }
 
 void TestStorageWriteNonAligned() {
