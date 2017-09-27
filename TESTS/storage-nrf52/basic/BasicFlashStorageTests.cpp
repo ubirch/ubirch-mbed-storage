@@ -22,7 +22,6 @@
  */
 
 #include "mbed.h"
-#include "rtos.h"
 #include "FlashStorage.h"
 #include <BLE.h>
 #include <nrf52_bitfields.h>

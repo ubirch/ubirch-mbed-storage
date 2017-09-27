@@ -1,6 +1,6 @@
 /**
  ******************************************************************************
- * @file    key-storage.cpp
+ * @file    FlashStorage.cpp
  * @author  Waldemar Gruenwald
  * @version V1.0.0
  * @date    20 July 2017
