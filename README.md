@@ -23,7 +23,7 @@ the flash memory of the MCU.
 ## Testing
 
 ```bash
-mbed new .
+mbed new --library .
 mbed target NRF52_DK
 mbed toolchain GCC_ARM
 mbed test -n tests-storage-nrf52*
