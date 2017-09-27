@@ -1,5 +1,7 @@
 # Flash Storage
 
+> **⚠ WIP: not all tests are working yet!**
+
 An mbed OS library to store data in non-volatile memory. Requires some
 setup to ensure space is available or alternatively, you know your
 free areas.
@@ -19,10 +21,6 @@ These functions allow the handling of the non-volatile data storage in
 the flash memory of the MCU.
 
 ## Testing
-
-> Implementation currently only works with mbed-os rev.
-> [`#50b3418e4548`](https://github.com/ARMmbed/mbed-os/#50b3418e45484ebf442b88cd935a2d5355402d7d)
-> You may need to fix the `mbed-os.lib` file and run `mbed update`.
 
 ```bash
 mbed new .
