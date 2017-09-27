@@ -1,8 +1,8 @@
 /*
- * SI7050 Sensor library tests.
+ * nRF52 flash storage library tests.
  *
- * @author Waldemar Grünwald
- * @date 2017-07-25
+ * @author Matthias L. Jugel
+ * @date 2017-09-27
  *
  * Copyright 2017 ubirch GmbH (https://ubirch.com)
  *
