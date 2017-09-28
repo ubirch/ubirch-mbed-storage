@@ -49,9 +49,9 @@ void TestStorageWriteMultipleWords() {
     uint8_t readData[8] = {0x00, 0x00, 0x00, 0x00,
                            0x00, 0x00, 0x00, 0x00};
 
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x01, (const unsigned char *) writeData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x81, (const unsigned char *) writeData, sizeof(writeData)),
                              "failed to write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x01, (unsigned char *) readData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x81, (unsigned char *) readData, sizeof(writeData)),
                              "failed to read from storage");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(writeData, readData, sizeof(writeData),
                                          "data read does not match written data");
@@ -61,9 +61,9 @@ void TestStorageWriteSingleByte() {
     const uint8_t writeData = 0x2C;
     uint8_t readData = 0x00;
 
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x03, (const unsigned char *) &writeData, 1),
+    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x13, (const unsigned char *) &writeData, 1),
                              "failed to write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x03, (unsigned char *) &readData, 1),
+    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x13, (unsigned char *) &readData, 1),
                              "failed to read from storage");
     TEST_ASSERT_EQUAL_HEX8_MESSAGE(writeData, readData, "data read does not match written data");
 }
@@ -73,11 +73,11 @@ void TestStorageWriteHalfWord() {
     const uint8_t readDataExpected[4] = {0xA1, 0xB2, 0x00, 0x00};
     uint8_t readData[4] = {0x00, 0x00, 0x00, 0x00};
 
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x04, (const unsigned char *) writeData, 2),
+    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x24, (const unsigned char *) writeData, 2),
                              "failed to write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x04, (unsigned char *) readData, 2),
+    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x24, (unsigned char *) readData, 2),
                              "failed to read from storage");
-    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(writeData, readDataExpected, sizeof(readDataExpected),
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(readData, readDataExpected, sizeof(readDataExpected),
                                          "data read does not match written data");
 }
 
@@ -85,9 +85,9 @@ void TestStorageWriteThreeBytes() {
     const uint8_t writeData[3] = {0xB4, 0xC3, 0xD1};
     uint8_t readData[3] = {0x00, 0x00, 0x00};
 
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x05, (const unsigned char *) writeData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x35, (const unsigned char *) writeData, sizeof(writeData)),
                              "failed to write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x05, (unsigned char *) readData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x35, (unsigned char *) readData, sizeof(writeData)),
                              "failed to read from storage");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(writeData, readData, sizeof(writeData),
                                          "data read does not match written data");
@@ -101,11 +101,11 @@ void TestStorageWriteWordAndHalfWord() {
     uint8_t readData[8] = {0x00, 0x00, 0x00, 0x00,
                            0x00, 0x00, 0x00, 0x00};
 
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x06, (const unsigned char *) writeData, 6),
+    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x46, (const unsigned char *) writeData, 6),
                              "failed to write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x06, (unsigned char *) readData, 6),
+    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x46, (unsigned char *) readData, 6),
                              "failed to read from storage");
-    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(writeData, readDataExpected, sizeof(readDataExpected),
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(readData, readDataExpected, sizeof(readDataExpected),
                                          "data read does not match written data");
 }
 
@@ -118,9 +118,9 @@ void TestStorageWriteBuffer() {
     memset(readData, 0, sizeof(readData));
 
 
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x08, (const unsigned char *) writeData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x58, (const unsigned char *) writeData, sizeof(writeData)),
                              "failed to write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x08, (unsigned char *) readData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x58, (unsigned char *) readData, sizeof(writeData)),
                              "failed to read from storage");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(writeData, readData, sizeof(writeData),
                                          "data read does not match written data");
@@ -128,20 +128,21 @@ void TestStorageWriteBuffer() {
 }
 
 void TestStorageWriteFailOnUsedFlash() {
+
     const uint32_t writeData = 0xA1B2C3D4;
     const uint32_t writeData2 = 0x4D3C2B1A;
     uint32_t readData = 0x000000;
 
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x14, (const unsigned char *) &writeData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x64, (const unsigned char *) &writeData, sizeof(writeData)),
                              "failed to write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x14, (unsigned char *) &readData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x64, (unsigned char *) &readData, sizeof(writeData)),
                              "failed to read from storage");
     TEST_ASSERT_EQUAL_HEX32_MESSAGE(writeData, readData, "data read does not match written data");
 
     // try to write again, the read should then still be the original writeData value
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x14, (const unsigned char *) &writeData2, sizeof(writeData2)),
+    TEST_ASSERT_TRUE_MESSAGE(!ks_write_data(0x64, (const unsigned char *) &writeData2, sizeof(writeData2)),
                              "write operation failed");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x14, (unsigned char *) &readData, sizeof(writeData2)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x64, (unsigned char *) &readData, sizeof(writeData2)),
                              "failed to read from storage");
     TEST_ASSERT_EQUAL_HEX32_MESSAGE(writeData, readData, "data read does not match written data");
 
@@ -153,10 +154,10 @@ void TestStorageWriteNonAligned() {
     uint32_t readData = 0x000000;
 
     // TODO: the lib automatically aligned the address on 4 byte (address * 4)!!
-    TEST_ASSERT_MESSAGE(false, "the lib auto-alignes, so this test is not possible!")
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x15, (const unsigned char *) &writeData, sizeof(writeData)),
+//    TEST_ASSERT_MESSAGE(false, "the lib auto-alignes, so this test is not possible!")
+    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x75, (const unsigned char *) &writeData, sizeof(writeData)),
                              "failed to write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x15, (unsigned char *) &readData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x75, (unsigned char *) &readData, sizeof(writeData)),
                              "failed to read from storage");
     TEST_ASSERT_EQUAL_HEX32_MESSAGE(writeData, readData, "data read does not match written data");
 

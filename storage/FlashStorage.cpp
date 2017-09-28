@@ -36,6 +36,7 @@
 #include "FlashStorage.h"
 #include <nrf_soc.h>
 #include <cstdio>
+#include <malloc.h>
 
 //#define PRINTF(...)
 #define PRINTF printf
@@ -61,13 +62,13 @@ static void fs_evt_handler(fs_evt_t const *const evt, fs_ret_t result) {
  * set the configuration
  */
 FS_REGISTER_CFG(fs_config_t fs_config) =
-{
-.p_start_addr = 0,                // DUMMY
-.p_end_addr = (const uint32_t *) PAGE_SIZE_WORDS,    // DUMMY
-.callback  = fs_evt_handler, // Function for event callbacks.
-.num_pages = NUM_PAGES,      // Number of physical flash pages required.
-.priority  = 0xFF            // Priority for flash usage.
-};
+        {
+                .p_start_addr = 0,                // DUMMY
+                .p_end_addr = (const uint32_t *) PAGE_SIZE_WORDS,    // DUMMY
+                .callback  = fs_evt_handler, // Function for event callbacks.
+                .num_pages = NUM_PAGES,      // Number of physical flash pages required.
+                .priority  = 0xFF            // Priority for flash usage.
+        };
 
 
 bool ks_init(void) {
@@ -89,15 +90,36 @@ bool ks_read_data(uint32_t p_location, unsigned char *buffer, uint16_t length8) 
     if (buffer == NULL || length8 == 0) {
         return false;
     }
-    uint16_t length32 = length8 >> 2;
+
+    // determine the real location alligned to 32bit (4Byte) values
+    uint8_t preLength = (uint8_t) (p_location % 4);
+    uint32_t locationReal = p_location - preLength;
+    // determine the required length, considering the preLength
+    uint16_t lengthReal = (uint16_t) (length8 + preLength);
+    if (lengthReal % 4) {
+        lengthReal += 4 - (lengthReal % 4);
+    }
+
+    uint16_t length32 = lengthReal >> 2;
     uint32_t buf32[length32];
-    PRINTF("Data read from flash address 0x%X: ", ((uint32_t) fs_config.p_start_addr) + p_location);
+    PRINTF("Data read from flash address 0x%X: ", ((uint32_t) fs_config.p_start_addr) + locationReal);
     for (uint16_t i = 0; i < length32; i++) {
-        buf32[i] = *(fs_config.p_start_addr + p_location + i);
+        buf32[i] = *(fs_config.p_start_addr + locationReal + i);
         PRINTF("%X ", buf32[i]);
     }
     PRINTF("\r\n");
-    return ks_conv32to8(buf32, buffer, length8);
+
+    // create a new buffer, to fill all the data and convert the data into it
+    unsigned char bufferReal[lengthReal];
+    if (!ks_conv32to8(buf32, bufferReal, lengthReal)) {
+        return false;            // ERROR
+    }
+
+    // shift the data to the right position
+    for (int j = 0; j < length8; j++) {
+        buffer[j] = bufferReal[j + preLength];
+    }
+    return true;
 }
 
 
@@ -122,27 +144,56 @@ bool ks_write_data(uint32_t p_location, const unsigned char *buffer, uint16_t le
         return false;
     }
 
-    // TODO fix for buffer lenght < 4
+    // determine the real location alligned to 32bit (4Byte) values
+    uint8_t preLength = (uint8_t) (p_location % 4);
+    uint32_t locationReal = p_location - preLength;
+    // determine the required length, considering the preLength
+    uint16_t lengthReal = (uint16_t) (length8 + preLength);
+    if (lengthReal % 4) {
+        lengthReal += 4 - (lengthReal % 4);
+    }
 
-    //Write the buffer into flash
-    uint16_t length32 = length8 >> 2;
+    unsigned char bufferReal[lengthReal];
+
+    // check, if there is already data in the buffer
+    ks_read_data(locationReal, bufferReal, lengthReal);
+    for (int i = preLength; i < (preLength + length8); ++i) {
+        if (bufferReal[i] != 0xFF) {
+            return false;
+        }
+    }
+    // shift the data in the buffer to the right location
+    // and fill the reminding bytes with 0xFF to not overwrite existing data in the memory
+    for (int j = 0; j < preLength; j++) {
+        bufferReal[j] = 0xFF;
+    }
+    for (int k = 0; k < length8; k++) {
+        bufferReal[k + preLength] = buffer[k];
+    }
+    for (int l = (preLength + length8); l < lengthReal; l++) {
+        bufferReal[l] = 0xFF;
+    }
+
+    // convert the data into 32 bit array
+    uint16_t length32 = lengthReal >> 2;
     uint32_t buf32[length32];
     // TODO check if copying here is absolutely necessary
-    if (!ks_conv8to32(buffer, buf32, length8)) {
+    if (!ks_conv8to32(bufferReal, buf32, lengthReal)) {
         return false;            // ERROR
     }
 
+    //Write the buffer into flash
     PRINTF("Writing data 0x%X to address 0x%X\r\n", buf32[0], ((uint32_t) fs_config.p_start_addr + p_location));
     fs_callback_flag = 1;
-    fs_ret_t ret = fs_store(&fs_config, (fs_config.p_start_addr + p_location), buf32,
-                            (length32));      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
+    fs_ret_t ret = fs_store(&fs_config, (fs_config.p_start_addr + locationReal), buf32,
+                            length32);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
     if (ret != FS_SUCCESS) {
         PRINTF("    fstorage WRITE A ERROR    \n\r");
         return false;
     } else {
         PRINTF("    fstorage WRITE A successful    \n\r");
     }
-    while (fs_callback_flag == 1) /* do nothing */;
+    while (fs_callback_flag == 1) sd_app_evt_wait()/* do nothing */;
     return true;
 }
 
@@ -169,7 +220,7 @@ bool ks_conv32to8(const uint32_t *d32, unsigned char *d8, uint16_t length8) {
     for (uint16_t j = 0; j < (length8 >> 2); ++j) {
         temp = d32[j];
         for (int i = 0; i < 4; ++i) {
-            d8[(j << 2) + i] = (unsigned char) (temp & 0xff);
+            d8[(j << 2) + i] = (unsigned char) (temp & 0xFF);
             temp >>= 8;
         }
     }

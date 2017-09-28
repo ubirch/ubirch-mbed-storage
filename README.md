@@ -35,23 +35,21 @@ Current Status:
 +------------------+---------------+---------------------------+---------------------------------------------+--------+--------+--------+--------------------+
 | target           | platform_name | test suite                | test case                                   | passed | failed | result | elapsed_time (sec) |
 +------------------+---------------+---------------------------+---------------------------------------------+--------+--------+--------+--------------------+
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write 1.5 words-0      | 0      | 2      | FAIL   | 0.38               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write 2 words-0        | 1      | 0      | OK     | 0.2                |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write 3 byte-0         | 0      | 4      | FAIL   | 0.48               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write buffer-0         | 1      | 0      | OK     | 0.31               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write byte-0           | 0      | 2      | FAIL   | 0.29               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write existing fails-0 | 0      | 1      | FAIL   | 0.43               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write half word-0      | 0      | 3      | FAIL   | 0.4                |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write non-aligned-0    | 1      | 0      | OK     | 0.2                |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write word-0           | 1      | 0      | OK     | 0.2                |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write 1.5 words-0      | 1      | 0      | OK     | 0.28               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write 2 words-0        | 1      | 0      | OK     | 0.29               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write 3 byte-0         | 1      | 0      | OK     | 0.25               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write buffer-0         | 1      | 0      | OK     | 0.45               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write byte-0           | 1      | 0      | OK     | 0.26               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write existing fails-0 | 1      | 0      | OK     | 0.36               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write half word-0      | 1      | 0      | OK     | 0.26               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write non-aligned-0    | 1      | 0      | OK     | 0.27               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic | Storage test storage write word-0           | 1      | 0      | OK     | 0.25               |
 +------------------+---------------+---------------------------+---------------------------------------------+--------+--------+--------+--------------------+
 ```
 
 ## TODO
 
-- fix tests and library
 - add automated tests on dev kit hardware
-- link test results here
 
 
 # License
