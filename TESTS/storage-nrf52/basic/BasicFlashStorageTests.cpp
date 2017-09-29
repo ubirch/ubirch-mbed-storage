@@ -118,9 +118,9 @@ void TestStorageWriteBuffer() {
     memset(readData, 0, sizeof(readData));
 
 
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x58, (const unsigned char *) writeData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_write_data(0x158, (const unsigned char *) writeData, sizeof(writeData)),
                              "failed to write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x58, (unsigned char *) readData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(0x158, (unsigned char *) readData, sizeof(writeData)),
                              "failed to read from storage");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(writeData, readData, sizeof(writeData),
                                          "data read does not match written data");
@@ -184,9 +184,9 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
     static bool initialized = false;
     if (!initialized) {
         TEST_ASSERT_TRUE_MESSAGE(ks_init(), "failed to initialze storage");
-        TEST_ASSERT_TRUE_MESSAGE(ks_erase_page(), "failed to erase page");
         initialized = true;
     }
+    TEST_ASSERT_TRUE_MESSAGE(ks_erase_page(), "failed to erase page");
     GREENTEA_SETUP(150, "default_auto");
     return greentea_test_setup_handler(number_of_cases);
 }

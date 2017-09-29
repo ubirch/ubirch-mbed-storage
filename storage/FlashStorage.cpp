@@ -104,8 +104,8 @@ bool ks_read_data(uint32_t p_location, unsigned char *buffer, uint16_t length8) 
     uint32_t buf32[length32];
     PRINTF("Data read from flash address 0x%X: ", ((uint32_t) fs_config.p_start_addr) + locationReal);
     for (uint16_t i = 0; i < length32; i++) {
-        buf32[i] = *(fs_config.p_start_addr + locationReal + i);
-        PRINTF("%X ", buf32[i]);
+        buf32[i] = *(fs_config.p_start_addr + (locationReal >> 2) + i);
+        PRINTF("(%u)[0x%X] = %X \r\n", i, (fs_config.p_start_addr + (locationReal >> 2) + i), buf32[i]);
     }
     PRINTF("\r\n");
 
@@ -134,13 +134,14 @@ bool ks_erase_page(void) {
     } else {
         PRINTF("    fstorage ERASE successful    \n\r");
     }
-    while (fs_callback_flag == 1) sd_app_evt_wait()/* do nothing */;
+    while (fs_callback_flag == 1) /* do nothing */ ;
     return true;
 }
 
 
 bool ks_write_data(uint32_t p_location, const unsigned char *buffer, uint16_t length8) {
     if (buffer == NULL || length8 == 0) {
+        PRINTF("ERROR NULL  \r\n");
         return false;
     }
 
@@ -159,6 +160,7 @@ bool ks_write_data(uint32_t p_location, const unsigned char *buffer, uint16_t le
     ks_read_data(locationReal, bufferReal, lengthReal);
     for (int i = preLength; i < (preLength + length8); ++i) {
         if (bufferReal[i] != 0xFF) {
+            PRINTF("ERROR FLASH NOT EMPTY \r\n");
             return false;
         }
     }
@@ -179,13 +181,19 @@ bool ks_write_data(uint32_t p_location, const unsigned char *buffer, uint16_t le
     uint32_t buf32[length32];
     // TODO check if copying here is absolutely necessary
     if (!ks_conv8to32(bufferReal, buf32, lengthReal)) {
+        PRINTF("ERROR CONVERSION \r\n");
         return false;            // ERROR
     }
 
     //Write the buffer into flash
-    PRINTF("Writing data 0x%X to address 0x%X\r\n", buf32[0], ((uint32_t) fs_config.p_start_addr + p_location));
+    PRINTF("Writing data to addr =[0x%X], num =[0x%X], data =[0x ", ((uint32_t) fs_config.p_start_addr + locationReal), lengthReal);
+    for (int m = 0; m < length32; m++) {
+        PRINTF(" %X", buf32[m]);
+    }
+    PRINTF("]\r\n");
+
     fs_callback_flag = 1;
-    fs_ret_t ret = fs_store(&fs_config, (fs_config.p_start_addr + locationReal), buf32,
+    fs_ret_t ret = fs_store(&fs_config, (fs_config.p_start_addr + (locationReal >> 2)), buf32,
                             length32);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
     if (ret != FS_SUCCESS) {
         PRINTF("    fstorage WRITE A ERROR    \n\r");
@@ -193,7 +201,7 @@ bool ks_write_data(uint32_t p_location, const unsigned char *buffer, uint16_t le
     } else {
         PRINTF("    fstorage WRITE A successful    \n\r");
     }
-    while (fs_callback_flag == 1) sd_app_evt_wait()/* do nothing */;
+    while (fs_callback_flag == 1) /* do nothing */;
     return true;
 }
 
