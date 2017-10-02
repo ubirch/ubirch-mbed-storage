@@ -1,6 +1,6 @@
 # Flash Storage
 
-> **⚠ WIP: not all tests are working yet!**
+> **⚠ WIP: all tests are working now!**
 
 An mbed OS library to store data in non-volatile memory. Requires some
 setup to ensure space is available or alternatively, you know your
