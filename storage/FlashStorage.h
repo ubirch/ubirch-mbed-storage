@@ -42,7 +42,7 @@ extern "C" {
 
 #include <fstorage.h>
 
-#define NUM_PAGES 1
+#define NUM_PAGES 3
 
 #if defined (NRF52)
 #define PAGE_SIZE_WORDS 1024
@@ -86,7 +86,7 @@ bool ks_read_data(uint32_t p_location, unsigned char *buffer, uint16_t length8);
  *
  * @return int 			true, if erasing succeeded, else false
  */
-bool ks_erase_page(void);
+bool ks_erase_page(uint8_t page = 0);
 
 /*!
  * @brief  Write data to the key storage
@@ -122,6 +122,22 @@ bool ks_conv8to32(const unsigned char *d8, uint32_t *d32, uint16_t length8);
  * @return int			true, if successful, else false
  */
 bool ks_conv32to8(const uint32_t *d32, unsigned char *d8, uint16_t length8);
+
+
+/*!
+ * @brief   Get the start address of the storage.
+ *
+ * @return  start address (32 Bit)
+ */
+uint32_t ks_get_start_address(void);
+
+/*!
+ * @brief   Get the end address of the storage.
+ *
+ * @return end address (32 Bit)
+ */
+uint32_t ks_get_end_address(void);
+
 
 #ifdef __cplusplus
 }

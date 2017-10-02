@@ -37,6 +37,7 @@
 #include <nrf_soc.h>
 #include <cstdio>
 #include <malloc.h>
+#include <fstorage.h>
 
 //#define PRINTF(...)
 #define PRINTF printf
@@ -105,7 +106,7 @@ bool ks_read_data(uint32_t p_location, unsigned char *buffer, uint16_t length8) 
     PRINTF("Data read from flash address 0x%X: ", ((uint32_t) fs_config.p_start_addr) + locationReal);
     for (uint16_t i = 0; i < length32; i++) {
         buf32[i] = *(fs_config.p_start_addr + (locationReal >> 2) + i);
-        PRINTF("(%u)[0x%X] = %X \r\n", i, (fs_config.p_start_addr + (locationReal >> 2) + i), buf32[i]);
+//        PRINTF("(%u)[0x%X] = %X \r\n", i, (fs_config.p_start_addr + (locationReal >> 2) + i), buf32[i]);
     }
     PRINTF("\r\n");
 
@@ -123,11 +124,11 @@ bool ks_read_data(uint32_t p_location, unsigned char *buffer, uint16_t length8) 
 }
 
 
-bool ks_erase_page(void) {
+bool ks_erase_page(uint8_t page) {
     // Erase one page (page 0).
-    PRINTF("Erasing a flash page at address 0x%X\r\n", (uint32_t) fs_config.p_start_addr);
+    PRINTF("Erasing a flash page at address 0x%X\r\n", (uint32_t)(fs_config.p_start_addr + (PAGE_SIZE_WORDS * page)));
     fs_callback_flag = 1;
-    fs_ret_t ret = fs_erase(&fs_config, fs_config.p_start_addr, 1);
+    fs_ret_t ret = fs_erase(&fs_config, fs_config.p_start_addr + (PAGE_SIZE_WORDS * page), 1);
     if (ret != FS_SUCCESS) {
         PRINTF("    fstorage ERASE ERROR    \n\r");
         return false;
@@ -188,7 +189,7 @@ bool ks_write_data(uint32_t p_location, const unsigned char *buffer, uint16_t le
     //Write the buffer into flash
     PRINTF("Writing data to addr =[0x%X], num =[0x%X], data =[0x ", ((uint32_t) fs_config.p_start_addr + locationReal), lengthReal);
     for (int m = 0; m < length32; m++) {
-        PRINTF(" %X", buf32[m]);
+//        PRINTF(" %X", buf32[m]);
     }
     PRINTF("]\r\n");
 
@@ -216,9 +217,9 @@ bool ks_conv8to32(const unsigned char *d8, uint32_t *d32, uint16_t length8) {
                              (d8[(i << 2)]));
     }
     return true;
+// TODO pad the end with 0 align to 4 Bytes
 }
 
-// TODO pad the end with 0 align to 4 Bytes
 
 bool ks_conv32to8(const uint32_t *d32, unsigned char *d8, uint16_t length8) {
     if (d8 == NULL || d32 == NULL || length8 == 0) {
@@ -233,6 +234,13 @@ bool ks_conv32to8(const uint32_t *d32, unsigned char *d8, uint16_t length8) {
         }
     }
     return true;
+// TODO pad the end with 0 alagn to 4 Bytes
 }
 
-// TODO pad the end with 0 alagn to 4 Bytes
+uint32_t ks_get_start_address(){
+    return (uint32_t) (fs_config.p_start_addr);
+}
+
+uint32_t ks_get_end_address(){
+    return (uint32_t) (fs_config.p_end_addr);
+}
