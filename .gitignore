@@ -15,3 +15,5 @@ shields
 .hg
 mbed-os*
 .mbed
+testmem.csv
+testresult.xml
