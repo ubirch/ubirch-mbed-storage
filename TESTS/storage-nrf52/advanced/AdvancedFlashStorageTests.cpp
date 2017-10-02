@@ -32,6 +32,8 @@
 
 using namespace utest::v1;
 
+FlashStorage flashStorage;
+
 void TestTrue() {
     TEST_ASSERT_TRUE_MESSAGE(true, "this is just to make it work");
 }
@@ -54,9 +56,9 @@ void TestStorageWriteSubsequentBytes() {
 
             printf(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n"
                            "testing loc = [0x%X],  index = [%u], number = [%u]\r\n", location, index, number);
-            TEST_ASSERT_TRUE_MESSAGE(ks_write_data((uint32_t)(location + index), (const unsigned char *) &writeData[index], number),
+            TEST_ASSERT_TRUE_MESSAGE(flashStorage.writeData((uint32_t)(location + index), (const unsigned char *) &writeData[index], number),
                                      "failed to write to storage");
-            TEST_ASSERT_TRUE_MESSAGE(ks_read_data(location, (unsigned char *) readData, sizeof(readData)),
+            TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData(location, (unsigned char *) readData, sizeof(readData)),
                                      "failed to read from storage");
             TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(&writeData[index], &readData[index], number/* sizeof(writeData)*/,
                                                  "data read does not match written data");
@@ -71,11 +73,11 @@ void TestStorageWriteAboveEndAddress(){
     uint8_t readByte = 0x00;
 
     // get the end location of the storage
-    location = ks_get_end_address() - ks_get_start_address();
+    location = flashStorage.getEndAddress() - flashStorage.getStartAddress();
 
-    TEST_ASSERT_TRUE_MESSAGE(!ks_write_data(location, (const unsigned char *)(&writeByte), sizeof(writeByte)),
+    TEST_ASSERT_TRUE_MESSAGE(!flashStorage.writeData(location, (const unsigned char *)(&writeByte), sizeof(writeByte)),
                              "failed to not write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(location, (unsigned char *) (&readByte), sizeof(readByte)),
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData(location, (unsigned char *) (&readByte), sizeof(readByte)),
                              "failed to read from storage");
     TEST_ASSERT_NOT_EQUAL_MESSAGE(writeByte, readByte, "data read does match written data");
 }
@@ -93,9 +95,9 @@ void TestStorageWriteOverPageBoarder(){
                             0x00, 0x00, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00};
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data((uint32_t)(location), (const unsigned char *) writeData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.writeData((uint32_t)(location), (const unsigned char *) writeData, sizeof(writeData)),
                              "failed to write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(location, (unsigned char *) readData, sizeof(readData)),
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData(location, (unsigned char *) readData, sizeof(readData)),
                              "failed to read from storage");
 
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(writeData, readData, sizeof(writeData)/* sizeof(writeData)*/,
@@ -113,9 +115,9 @@ void TestStorageWriteBigBuffer(){
     for (int i = 0; i < length; i++) {
         writeData[i] =(uint8_t)(i & 0xFF);
     }
-    TEST_ASSERT_TRUE_MESSAGE(ks_write_data((uint32_t)(location), (const unsigned char *) writeData, sizeof(writeData)),
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.writeData((uint32_t)(location), (const unsigned char *) writeData, sizeof(writeData)),
                              "failed to write to storage");
-    TEST_ASSERT_TRUE_MESSAGE(ks_read_data(location, (unsigned char *) readData, sizeof(readData)),
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData(location, (unsigned char *) readData, sizeof(readData)),
                              "failed to read from storage");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(writeData, readData, sizeof(writeData)/* sizeof(writeData)*/,
                                          "data read does not match written data");
@@ -136,15 +138,15 @@ void TestStorageErasePages(){
         printf(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n"
                        "testing erase page = [%X],  address = [0x%X]\r\n", numPages, (location + randomAddr));
         // first write one byte and read it to check if data is in the storage
-        TEST_ASSERT_TRUE_MESSAGE(ks_write_data((location + randomAddr), (const unsigned char *) (&writeByte), sizeof(writeByte)),
+        TEST_ASSERT_TRUE_MESSAGE(flashStorage.writeData((location + randomAddr), (const unsigned char *) (&writeByte), sizeof(writeByte)),
                                  "failed to write to storage");
-        TEST_ASSERT_TRUE_MESSAGE(ks_read_data((location + randomAddr), (unsigned char *) (&readByte1), sizeof(readByte1)),
+        TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData((location + randomAddr), (unsigned char *) (&readByte1), sizeof(readByte1)),
                                  "failed to read from storage");
         TEST_ASSERT_EQUAL_HEX8_MESSAGE(writeByte, readByte1, "data read does not match written data");
 
         // now erase the page and check if the page is completely empty (0xFF)
-        TEST_ASSERT_TRUE_MESSAGE(ks_erase_page((uint8_t)(numPages)), "page not erased");
-        TEST_ASSERT_TRUE_MESSAGE(ks_read_data((location + randomAddr), (unsigned char *) (&readByte2), sizeof(readByte1)),
+        TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage((uint8_t)(numPages)), "page not erased");
+        TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData((location + randomAddr), (unsigned char *) (&readByte2), sizeof(readByte1)),
                                  "failed to read from storage");
         TEST_ASSERT_EQUAL_HEX8_MESSAGE(readByte2, emptyData, "data read does not match written data");
         location += 0x1000;
@@ -168,10 +170,10 @@ Case("Storage test storage write big buffer-0", TestStorageWriteBigBuffer, green
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
     static bool initialized = false;
     if (!initialized) {
-        TEST_ASSERT_TRUE_MESSAGE(ks_init(), "failed to initialize storage");
+        TEST_ASSERT_TRUE_MESSAGE(flashStorage.init(), "failed to initialize storage");
         initialized = true;
     }
-    TEST_ASSERT_TRUE_MESSAGE(ks_erase_page(), "failed to erase page");
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(), "failed to erase page");
     GREENTEA_SETUP(150, "default_auto");
     return greentea_test_setup_handler(number_of_cases);
 }

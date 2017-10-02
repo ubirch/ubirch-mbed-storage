@@ -72,7 +72,7 @@ FS_REGISTER_CFG(fs_config_t fs_config) =
         };
 
 
-bool ks_init(void) {
+bool FlashStorage::init(){
     /*
      * initialize the storage and check for success
      */
@@ -87,7 +87,7 @@ bool ks_init(void) {
 }
 
 
-bool ks_read_data(uint32_t p_location, unsigned char *buffer, uint16_t length8) {
+bool FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uint16_t length8){
     if (buffer == NULL || length8 == 0) {
         return false;
     }
@@ -112,7 +112,7 @@ bool ks_read_data(uint32_t p_location, unsigned char *buffer, uint16_t length8) 
 
     // create a new buffer, to fill all the data and convert the data into it
     unsigned char bufferReal[lengthReal];
-    if (!ks_conv32to8(buf32, bufferReal, lengthReal)) {
+    if (!this->conv32to8(buf32, bufferReal, lengthReal)) {
         return false;            // ERROR
     }
 
@@ -124,7 +124,7 @@ bool ks_read_data(uint32_t p_location, unsigned char *buffer, uint16_t length8) 
 }
 
 
-bool ks_erase_page(uint8_t page) {
+bool FlashStorage::erasePage(uint8_t page) {
     // Erase one page (page 0).
     PRINTF("Erasing a flash page at address 0x%X\r\n", (uint32_t)(fs_config.p_start_addr + (PAGE_SIZE_WORDS * page)));
     fs_callback_flag = 1;
@@ -140,7 +140,7 @@ bool ks_erase_page(uint8_t page) {
 }
 
 
-bool ks_write_data(uint32_t p_location, const unsigned char *buffer, uint16_t length8) {
+bool FlashStorage::writeData(uint32_t p_location, const unsigned char *buffer, uint16_t length8){
     if (buffer == NULL || length8 == 0) {
         PRINTF("ERROR NULL  \r\n");
         return false;
@@ -158,7 +158,7 @@ bool ks_write_data(uint32_t p_location, const unsigned char *buffer, uint16_t le
     unsigned char bufferReal[lengthReal];
 
     // check, if there is already data in the buffer
-    ks_read_data(locationReal, bufferReal, lengthReal);
+    this->readData(locationReal, bufferReal, lengthReal);
     for (int i = preLength; i < (preLength + length8); ++i) {
         if (bufferReal[i] != 0xFF) {
             PRINTF("ERROR FLASH NOT EMPTY \r\n");
@@ -181,7 +181,7 @@ bool ks_write_data(uint32_t p_location, const unsigned char *buffer, uint16_t le
     uint16_t length32 = lengthReal >> 2;
     uint32_t buf32[length32];
     // TODO check if copying here is absolutely necessary
-    if (!ks_conv8to32(bufferReal, buf32, lengthReal)) {
+    if (!this->conv8to32(bufferReal, buf32, lengthReal)) {
         PRINTF("ERROR CONVERSION \r\n");
         return false;            // ERROR
     }
@@ -207,7 +207,7 @@ bool ks_write_data(uint32_t p_location, const unsigned char *buffer, uint16_t le
 }
 
 
-bool ks_conv8to32(const unsigned char *d8, uint32_t *d32, uint16_t length8) {
+bool FlashStorage::conv8to32(const unsigned char *d8, uint32_t *d32, uint16_t length8){
     if (d8 == NULL || d32 == NULL || length8 == 0) {
         return false;
     }
@@ -221,7 +221,7 @@ bool ks_conv8to32(const unsigned char *d8, uint32_t *d32, uint16_t length8) {
 }
 
 
-bool ks_conv32to8(const uint32_t *d32, unsigned char *d8, uint16_t length8) {
+bool FlashStorage::conv32to8(const uint32_t *d32, unsigned char *d8, uint16_t length8){
     if (d8 == NULL || d32 == NULL || length8 == 0) {
         return false;
     }
@@ -237,10 +237,18 @@ bool ks_conv32to8(const uint32_t *d32, unsigned char *d8, uint16_t length8) {
 // TODO pad the end with 0 alagn to 4 Bytes
 }
 
-uint32_t ks_get_start_address(){
+uint32_t FlashStorage::getStartAddress(){
     return (uint32_t) (fs_config.p_start_addr);
 }
 
-uint32_t ks_get_end_address(){
+uint32_t FlashStorage::getEndAddress(){
     return (uint32_t) (fs_config.p_end_addr);
+}
+
+FlashStorage::FlashStorage() {
+
+}
+
+FlashStorage::~FlashStorage() {
+
 }
