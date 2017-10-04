@@ -42,7 +42,7 @@ extern "C" {
 
 #include <fstorage.h>
 
-#define NUM_PAGES 1
+#define NUM_PAGES 3
 
 #if defined (NRF52)
 #define PAGE_SIZE_WORDS 1024
@@ -60,69 +60,98 @@ extern "C" {
  * @endcode
  */
 
-/*!
- * @brief  Initialize the key storage
- * to enable a secure data storage of the size, described in the configuration
- *                                                                                                                                                                                                            Cal
- * @note	the initialization only works, if the soft device and the event
- * 			handler are enabled
- *
- * @return 	int 	true, if initialization successful, else false
- */
-bool ks_init(void);
+class FlashStorage{
 
-/*!
- * @brief  Read data from the key storage
- *
- * @param p_location	location (pointer) inside the configured data space (32 Bit)
- * @param *buffer		pointer to the buffer, where the data will be filled in (8 Bit
- * @param length8 		length of data elements to read (8 Bit)
- *
- * @return int 			true, if reading successful, else false
- */
-bool ks_read_data(uint32_t p_location, unsigned char *buffer, uint16_t length8);
+public:
 
-/** Erase a page in the key storage
- *
- * @return int 			true, if erasing succeeded, else false
- */
-bool ks_erase_page(void);
+    /*!
+     * @brief   Constructor
+     */
+    FlashStorage();
 
-/*!
- * @brief  Write data to the key storage
- *
- * @param p_location 	location (pointer) inside the configured data space (32 Bit)
- * @param *buffer		pointer to the buffer with the data (8 Bit)
- * @param length8 		length of data elements to write (8 Bit)
- *
- * @return int 			true, if writing successful, else false
- */
-bool ks_write_data(uint32_t p_location, const unsigned char *buffer, uint16_t length8);
+    /*!
+     * @brief   Destructor
+     */
+    ~FlashStorage();
+    /*!
+     * @brief  Initialize the key storage
+     * to enable a secure data storage of the size, described in the configuration
+     *                                                                                                                                                                                                            Cal
+     * @note	the initialization only works, if the soft device and the event
+     * 			handler are enabled
+     *
+     * @return 	int 	true, if initialization successful, else false
+     */
+    bool init(void);
+
+    /*!
+     * @brief  Read data from the key storage
+     *
+     * @param p_location	location (pointer) inside the configured data space (32 Bit)
+     * @param *buffer		pointer to the buffer, where the data will be filled in (8 Bit
+     * @param length8 		length of data elements to read (8 Bit)
+     *
+     * @return int 			true, if reading successful, else false
+     */
+    bool readData(uint32_t p_location, unsigned char *buffer, uint16_t length8);
+
+    /** Erase a page in the key storage
+     *
+     * @return int 			true, if erasing succeeded, else false
+     */
+    bool erasePage(uint8_t page = 0);
+
+    /*!
+     * @brief  Write data to the key storage
+     *
+     * @param p_location 	location (pointer) inside the configured data space (32 Bit)
+     * @param *buffer		pointer to the buffer with the data (8 Bit)
+     * @param length8 		length of data elements to write (8 Bit)
+     *
+     * @return int 			true, if writing successful, else false
+     */
+    bool writeData(uint32_t p_location, const unsigned char *buffer, uint16_t length8);
+
+private:
+    /*!
+     * @brief Convert 8 Bit array into 32 Bit array
+     *
+     * @param *d8 			pointer to 8 Bit data array (input)
+     * @param *d32			pointer to 32 Bit data array (output)
+     * @param length8		length of the 8 bit array
+     *
+     * @return int			true if successful, else false
+     */
+    bool conv8to32(const unsigned char *d8, uint32_t *d32, uint16_t length8);
 
 
-/*!
- * @brief Convert 8 Bit array into 32 Bit array
- *
- * @param *d8 			pointer to 8 Bit data array (input)
- * @param *d32			pointer to 32 Bit data array (output)
- * @param length8		length of the 8 bit array
- *
- * @return int			true if successful, else false
- */
-bool ks_conv8to32(const unsigned char *d8, uint32_t *d32, uint16_t length8);
+    /*!
+     * @brief Convert 32 Bit array into 8 bit array.
+     *
+     * @param *d32			pointer to 32 Bit data array (input)
+     * @param *d8 			pointer to 8 Bit data array (output)
+     * @param length8 		length of 8 Bit array
+     *
+     * @return int			true, if successful, else false
+     */
+    bool conv32to8(const uint32_t *d32, unsigned char *d8, uint16_t length8);
 
+public:
+    /*!
+     * @brief   Get the start address of the storage.
+     *
+     * @return  start address (32 Bit)
+     */
+    uint32_t getStartAddress(void);
 
-/*!
- * @brief Convert 32 Bit array into 8 bit array.
- *
- * @param *d32			pointer to 32 Bit data array (input)
- * @param *d8 			pointer to 8 Bit data array (output)
- * @param length8 		length of 8 Bit array
- *
- * @return int			true, if successful, else false
- */
-bool ks_conv32to8(const uint32_t *d32, unsigned char *d8, uint16_t length8);
+    /*!
+     * @brief   Get the end address of the storage.
+     *
+     * @return end address (32 Bit)
+     */
+    uint32_t getEndAddress(void);
 
+};
 #ifdef __cplusplus
 }
 #endif
