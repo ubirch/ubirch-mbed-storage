@@ -50,6 +50,7 @@ Current Status:
 ## TODO
 
 - add automated tests on dev kit hardware
+- store and erase haveto check if the softdevice is enabled, or not
 
 
 # License
