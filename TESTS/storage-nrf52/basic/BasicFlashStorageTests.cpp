@@ -22,9 +22,9 @@
  */
 
 #include "mbed.h"
-#include "FlashStorage.h"
 #include <BLE.h>
 #include <nrf52_bitfields.h>
+#include <NRF52FlashStorage.h>
 
 #include "utest/utest.h"
 #include "unity/unity.h"
@@ -32,7 +32,7 @@
 
 using namespace utest::v1;
 
-FlashStorage flashStorage;
+NRF52FlashStorage flashStorage;
 
 void TestStorageWriteWord() {
     const uint32_t writeData = 0xA1B2C3D4;
@@ -188,7 +188,7 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
         TEST_ASSERT_TRUE_MESSAGE(flashStorage.init(), "failed to initialze storage");
         initialized = true;
     }
-    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(), "failed to erase page");
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(0, 0), "failed to erase page");
     GREENTEA_SETUP(150, "default_auto");
     return greentea_test_setup_handler(number_of_cases);
 }

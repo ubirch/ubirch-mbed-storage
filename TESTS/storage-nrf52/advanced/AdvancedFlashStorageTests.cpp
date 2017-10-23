@@ -22,9 +22,9 @@
  */
 
 #include "mbed.h"
-#include "FlashStorage.h"
 #include <BLE.h>
 #include <nrf52_bitfields.h>
+#include <NRF52FlashStorage.h>
 
 #include "utest/utest.h"
 #include "unity/unity.h"
@@ -32,7 +32,7 @@
 
 using namespace utest::v1;
 
-FlashStorage flashStorage;
+NRF52FlashStorage flashStorage;
 
 void TestTrue() {
     TEST_ASSERT_TRUE_MESSAGE(true, "this is just to make it work");
@@ -51,7 +51,7 @@ void TestStorageWriteSubsequentBytes() {
     int index = 0;
     uint16_t number = 1;
 
-    for(index = 0; index < 4; index ++){
+    for(index = 0; index < 1; index ++){
         for( number = 1; number < 16 - index; number++){
 
             printf(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n"
@@ -75,6 +75,7 @@ void TestStorageWriteAboveEndAddress(){
     // get the end location of the storage
     location = flashStorage.getEndAddress() - flashStorage.getStartAddress();
 
+    printf("#####\r\n start:(%X) end:(%X) loc:(%X) \r\n#####\r\n", flashStorage.getStartAddress(), flashStorage.getEndAddress(), location);
     TEST_ASSERT_TRUE_MESSAGE(!flashStorage.writeData(location, (const unsigned char *)(&writeByte), sizeof(writeByte)),
                              "failed to not write to storage");
     TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData(location, (unsigned char *) (&readByte), sizeof(readByte)),
@@ -107,7 +108,7 @@ void TestStorageWriteOverPageBoarder(){
  * @note this test fails if the number of pages < 3
  */
 void TestStorageWriteBigBuffer(){
-    uint16_t length = 0x280;
+    uint16_t length = 0x200;
     uint32_t location = 0x2000 - (length >> 1);
     uint8_t writeData[length];
     uint8_t readData[length];
@@ -153,6 +154,26 @@ void TestStorageErasePages(){
     }
 }
 
+void TestStorageWriteOverUpperBound(){
+    uint16_t length = 0x20;
+    uint32_t location = NUM_PAGES * 0x1000 - (length >> 1);
+    uint8_t writeData[length];
+    uint8_t readData[length];
+
+    for (int i = 0; i < length; i++) {
+        writeData[i] =(uint8_t)(i & 0xFF);
+    }
+    TEST_ASSERT_TRUE_MESSAGE(!flashStorage.writeData((uint32_t)(location), (const unsigned char *) writeData, sizeof(writeData)),
+                             "failed to recognize the upper bound of storage");
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData(location, (unsigned char *) readData, sizeof(readData)),
+                             "failed to read from storage");
+    for (int j = 0; j < length; j++) {
+        TEST_ASSERT_NOT_EQUAL_MESSAGE(writeData[j], readData[j],
+                                      "data was written over the upper bound");
+    }
+}
+
+
 utest::v1::status_t greentea_failure_handler(const Case *const source, const failure_t reason) {
     greentea_case_failure_abort_handler(source, reason);
     return STATUS_CONTINUE;
@@ -165,6 +186,8 @@ Case("Storage test storage write subsequent bytes-0", TestStorageWriteSubsequent
 Case("Storage test storage write byte above end address-0", TestStorageWriteAboveEndAddress, greentea_failure_handler),
 Case("Storage test storage write buffer over page boarder-0", TestStorageWriteOverPageBoarder, greentea_failure_handler),
 Case("Storage test storage write big buffer-0", TestStorageWriteBigBuffer, greentea_failure_handler),
+Case("Storage test storage write over the upper bound-0", TestStorageWriteOverUpperBound, greentea_failure_handler),
+
 };
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
@@ -173,7 +196,7 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
         TEST_ASSERT_TRUE_MESSAGE(flashStorage.init(), "failed to initialize storage");
         initialized = true;
     }
-    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(), "failed to erase page");
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(0, NUM_PAGES), "failed to erase pages");
     GREENTEA_SETUP(150, "default_auto");
     return greentea_test_setup_handler(number_of_cases);
 }
@@ -229,3 +252,5 @@ int main() {
     ble.onEventsToProcess(scheduleBleEventsProcessing);
     ble.init(startTests);
 }
+
+// softdevice_handler_init
