@@ -35,27 +35,29 @@ Current Status:
 +------------------+---------------+------------------------------+-------------------------------------------------------+--------+--------+--------+--------------------+
 | target           | platform_name | test suite                   | test case                                             | passed | failed | result | elapsed_time (sec) |
 +------------------+---------------+------------------------------+-------------------------------------------------------+--------+--------+--------+--------------------+
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage erase pages-0                    | 1      | 0      | OK     | 1.39               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage write big buffer-0               | 1      | 0      | OK     | 0.26               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage write buffer over page boarder-0 | 1      | 0      | OK     | 0.27               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage write byte above end address-0   | 1      | 0      | OK     | 0.26               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage write subsequent bytes-0         | 1      | 0      | OK     | 17.62              |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write 1.5 words-0                | 1      | 0      | OK     | 0.25               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write 2 words-0                  | 1      | 0      | OK     | 0.25               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write 3 byte-0                   | 1      | 0      | OK     | 0.25               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write buffer-0                   | 1      | 0      | OK     | 0.25               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write byte-0                     | 1      | 0      | OK     | 0.25               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write existing fails-0           | 1      | 0      | OK     | 0.37               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write half word-0                | 1      | 0      | OK     | 0.25               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write non-aligned-0              | 1      | 0      | OK     | 0.25               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write word-0                     | 1      | 0      | OK     | 0.24               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage erase pages without SD-0         | 1      | 0      | OK     | 2.97               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage erase pages-0                    | 1      | 0      | OK     | 2.37               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage write big buffer-0               | 1      | 0      | OK     | 1.52               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage write buffer over page boarder-0 | 1      | 0      | OK     | 0.37               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage write byte above end address-0   | 1      | 0      | OK     | 0.25               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage write over the upper bound-0     | 1      | 0      | OK     | 0.18               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage write subsequent bytes-0         | 1      | 0      | OK     | 6.25               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced | Storage test storage write without SD-0               | 2      | 0      | OK     | 0.36               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write 1.5 words-0                | 1      | 0      | OK     | 0.32               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write 2 words-0                  | 1      | 0      | OK     | 0.33               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write 3 byte-0                   | 1      | 0      | OK     | 0.32               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write buffer-0                   | 1      | 0      | OK     | 0.42               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write byte-0                     | 1      | 0      | OK     | 0.32               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write existing fails-0           | 1      | 0      | OK     | 0.43               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write half word-0                | 1      | 0      | OK     | 0.32               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write non-aligned-0              | 1      | 0      | OK     | 0.33               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic    | Storage test storage write word-0                     | 1      | 0      | OK     | 0.31               |
 +------------------+---------------+------------------------------+-------------------------------------------------------+--------+--------+--------+--------------------+
 ```
 
 ## TODO
 
 - add automated tests on dev kit hardware
-- store and erase haveto check if the softdevice is enabled, or not
 
 
 # License

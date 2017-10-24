@@ -22,9 +22,9 @@
  */
 
 #include "mbed.h"
-#include "FlashStorage.h"
 #include <BLE.h>
 #include <nrf52_bitfields.h>
+#include <NRF52FlashStorage.h>
 
 #include "utest/utest.h"
 #include "unity/unity.h"
@@ -32,9 +32,8 @@
 
 using namespace utest::v1;
 
-FlashStorage flashStorage;
-
 void TestStorageWriteWord() {
+    NRF52FlashStorage flashStorage;
     const uint32_t writeData = 0xA1B2C3D4;
     uint32_t readData = 0x000000;
 
@@ -46,6 +45,7 @@ void TestStorageWriteWord() {
 }
 
 void TestStorageWriteMultipleWords() {
+    NRF52FlashStorage flashStorage;
     const uint8_t writeData[8] = {0xA1, 0xB2, 0xC3, 0xD4,
                                   0xE5, 0xF6, 0x07, 0x18};
     uint8_t readData[8] = {0x00, 0x00, 0x00, 0x00,
@@ -60,6 +60,7 @@ void TestStorageWriteMultipleWords() {
 }
 
 void TestStorageWriteSingleByte() {
+    NRF52FlashStorage flashStorage;
     const uint8_t writeData = 0x2C;
     uint8_t readData = 0x00;
 
@@ -71,6 +72,7 @@ void TestStorageWriteSingleByte() {
 }
 
 void TestStorageWriteHalfWord() {
+    NRF52FlashStorage flashStorage;
     const uint8_t writeData[4] = {0xA1, 0xB2, 0xC3, 0xD4};
     const uint8_t readDataExpected[4] = {0xA1, 0xB2, 0x00, 0x00};
     uint8_t readData[4] = {0x00, 0x00, 0x00, 0x00};
@@ -84,6 +86,7 @@ void TestStorageWriteHalfWord() {
 }
 
 void TestStorageWriteThreeBytes() {
+    NRF52FlashStorage flashStorage;
     const uint8_t writeData[3] = {0xB4, 0xC3, 0xD1};
     uint8_t readData[3] = {0x00, 0x00, 0x00};
 
@@ -96,6 +99,7 @@ void TestStorageWriteThreeBytes() {
 }
 
 void TestStorageWriteWordAndHalfWord() {
+    NRF52FlashStorage flashStorage;
     const uint8_t writeData[8] = {0xA1, 0xB2, 0xC3, 0xD4,
                                   0xE5, 0xF6, 0x07, 0x18};
     const uint8_t readDataExpected[8] = {0xA1, 0xB2, 0xC3, 0xD4,
@@ -112,6 +116,7 @@ void TestStorageWriteWordAndHalfWord() {
 }
 
 void TestStorageWriteBuffer() {
+    NRF52FlashStorage flashStorage;
     uint8_t writeData[12 * 4];
     uint8_t readData[12 * 4];
 
@@ -130,6 +135,7 @@ void TestStorageWriteBuffer() {
 }
 
 void TestStorageWriteFailOnUsedFlash() {
+    NRF52FlashStorage flashStorage;
 
     const uint32_t writeData = 0xA1B2C3D4;
     const uint32_t writeData2 = 0x4D3C2B1A;
@@ -152,6 +158,7 @@ void TestStorageWriteFailOnUsedFlash() {
 }
 
 void TestStorageWriteNonAligned() {
+    NRF52FlashStorage flashStorage;
     const uint32_t writeData = 0xA1B2C3D4;
     uint32_t readData = 0x000000;
 
@@ -183,12 +190,13 @@ Case("Storage test storage write non-aligned-0", TestStorageWriteNonAligned, gre
 };
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
+    NRF52FlashStorage flashStorage;
     static bool initialized = false;
     if (!initialized) {
         TEST_ASSERT_TRUE_MESSAGE(flashStorage.init(), "failed to initialze storage");
         initialized = true;
     }
-    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(), "failed to erase page");
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(0, NUM_PAGES), "failed to erase page");
     GREENTEA_SETUP(150, "default_auto");
     return greentea_test_setup_handler(number_of_cases);
 }

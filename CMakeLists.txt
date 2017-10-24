@@ -171,10 +171,16 @@ add_library(mbed-os ${MBED_OS_SRCS})
 include_directories(${MBED_OS})
 # == END MBED OS 5 ==
 
-add_library(storage storage/FlashStorage.cpp)
+add_library(storage
+        storage/FlashStorage.cpp
+        storage/NRF52FlashStorage.cpp)
+
 target_include_directories(storage PUBLIC storage)
 
-add_executable(test-nrf52-basic TESTS/storage-nrf52/basic/BasicFlashStorageTests.cpp)
+add_executable(test-nrf52-basic
+        TESTS/storage-nrf52/basic/BasicFlashStorageTests.cpp
+        TESTS/storage-nrf52/advanced/AdvancedFlashStorageTests.cpp)
+
 target_link_libraries(test-nrf52-basic mbed-os storage)
 
 add_custom_target(run-tests ALL

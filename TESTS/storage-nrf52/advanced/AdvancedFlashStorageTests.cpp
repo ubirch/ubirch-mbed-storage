@@ -22,9 +22,9 @@
  */
 
 #include "mbed.h"
-#include "FlashStorage.h"
 #include <BLE.h>
 #include <nrf52_bitfields.h>
+#include <NRF52FlashStorage.h>
 
 #include "utest/utest.h"
 #include "unity/unity.h"
@@ -32,13 +32,34 @@
 
 using namespace utest::v1;
 
-FlashStorage flashStorage;
+static Thread bleEventThread(osPriorityNormal, 24000);
+static EventQueue bleEventQueue(/* event count */ 16 * EVENTS_EVENT_SIZE);
 
-void TestTrue() {
-    TEST_ASSERT_TRUE_MESSAGE(true, "this is just to make it work");
+void scheduleBleEventsProcessing(BLE::OnEventsToProcessCallbackContext *context) {
+    bleEventQueue.call(Callback<void()>(&context->ble, &BLE::processEvents));
 }
 
+void continueTests(BLE::InitializationCompleteCallbackContext *params);
+
+int initSd() {
+    BLE &ble = BLE::Instance();
+    ble.onEventsToProcess(scheduleBleEventsProcessing);
+    return ble.init(continueTests);
+}
+
+int deinitSd() {
+
+    if (BLE::Instance().hasInitialized()) {
+        BLE::Instance().shutdown();
+    }
+    return 0;
+}
+
+
+//NRF52FlashStorage flashStorage;
+
 void TestStorageWriteSubsequentBytes() {
+    NRF52FlashStorage flashStorage;
     uint32_t location = 0x00;
     const uint8_t writeData[16] = {0xA1, 0xB2, 0xC3, 0xD4,
                                    0xE5, 0xF6, 0x07, 0x18,
@@ -48,11 +69,9 @@ void TestStorageWriteSubsequentBytes() {
                             0x00, 0x00, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00};
-    int index = 0;
-    uint16_t number = 1;
 
-    for(index = 0; index < 4; index ++){
-        for( number = 1; number < 16 - index; number++){
+    for (int index = 0; index < 1; index++) {
+        for (uint16_t number = 1; number < 16 - index; number++) {
 
             printf(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n"
                            "testing loc = [0x%X],  index = [%u], number = [%u]\r\n", location, index, number);
@@ -68,6 +87,7 @@ void TestStorageWriteSubsequentBytes() {
 }
 
 void TestStorageWriteAboveEndAddress(){
+    NRF52FlashStorage flashStorage;
     uint32_t location;
     const uint8_t writeByte = 0xEA;
     uint8_t readByte = 0x00;
@@ -75,6 +95,7 @@ void TestStorageWriteAboveEndAddress(){
     // get the end location of the storage
     location = flashStorage.getEndAddress() - flashStorage.getStartAddress();
 
+    printf("#####\r\n start:(%X) end:(%X) loc:(%X) \r\n#####\r\n", flashStorage.getStartAddress(), flashStorage.getEndAddress(), location);
     TEST_ASSERT_TRUE_MESSAGE(!flashStorage.writeData(location, (const unsigned char *)(&writeByte), sizeof(writeByte)),
                              "failed to not write to storage");
     TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData(location, (unsigned char *) (&readByte), sizeof(readByte)),
@@ -86,6 +107,7 @@ void TestStorageWriteAboveEndAddress(){
  * @note    This test fails, if only one page is reserved
  */
 void TestStorageWriteOverPageBoarder(){
+    NRF52FlashStorage flashStorage;
     uint32_t location = 0x1000 - 0x08;
     const uint8_t writeData[16] = {0xA1, 0xB2, 0xC3, 0xD4,
                                    0xE5, 0xF6, 0x07, 0x18,
@@ -107,7 +129,8 @@ void TestStorageWriteOverPageBoarder(){
  * @note this test fails if the number of pages < 3
  */
 void TestStorageWriteBigBuffer(){
-    uint16_t length = 0x280;
+    NRF52FlashStorage flashStorage;
+    uint16_t length = 0x200;
     uint32_t location = 0x2000 - (length >> 1);
     uint8_t writeData[length];
     uint8_t readData[length];
@@ -124,8 +147,7 @@ void TestStorageWriteBigBuffer(){
 }
 
 void TestStorageErasePages(){
-    uint16_t pageSize = 0x1000;
-    uint16_t length = 0x100;
+    NRF52FlashStorage flashStorage;
     uint32_t location = 0;
     uint8_t writeByte = 0x5A;
     uint8_t readByte1 = 0x00;
@@ -153,27 +175,124 @@ void TestStorageErasePages(){
     }
 }
 
+void TestStorageWriteOverUpperBound(){
+    NRF52FlashStorage flashStorage;
+    uint16_t length = 0x20;
+    uint32_t location = NUM_PAGES * 0x1000 - (length >> 1);
+    uint8_t writeData[length];
+    uint8_t readData[length];
+
+    for (int i = 0; i < length; i++) {
+        writeData[i] =(uint8_t)(i & 0xFF);
+    }
+    TEST_ASSERT_TRUE_MESSAGE(!flashStorage.writeData((uint32_t)(location), (const unsigned char *) writeData, sizeof(writeData)),
+                             "failed to recognize the upper bound of storage");
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData(location, (unsigned char *) readData, sizeof(readData)),
+                             "failed to read from storage");
+    for (int j = 0; j < length; j++) {
+        TEST_ASSERT_NOT_EQUAL_MESSAGE(writeData[j], readData[j],
+                                      "data was written over the upper bound");
+    }
+}
+
+control_t TestStorageDisabledSd(const size_t n) {
+    NRF52FlashStorage flashStorage;
+
+    deinitSd();
+
+    uint32_t location = 0x3000 - 0x40 + 16 * n;
+    const uint8_t writeData[16] = {0xA1, 0xB2, 0xC3, 0xD4,
+                                   0xE5, 0xF6, 0x07, 0x18,
+                                   0x29, 0x3A, 0x4B, 0x5C,
+                                   0x6D, 0x7E, 0x8F, 0x90};
+    uint8_t readData[16] = {0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x00, 0x00, 0x00};
+    TEST_ASSERT_TRUE_MESSAGE(
+            flashStorage.writeData((uint32_t) (location), (const unsigned char *) writeData, sizeof(writeData)),
+            "failed to write to storage");
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData(location, (unsigned char *) readData, sizeof(readData)),
+                             "failed to read from storage");
+
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(writeData, readData, sizeof(writeData)/* sizeof(writeData)*/,
+                                         "data read does not match written data");
+
+    initSd();
+    return n < 2 ? CaseRepeatAll : CaseNext;
+}
+
+void TestStorageErasePagesDisabledSd() {
+    NRF52FlashStorage flashStorage;
+    uint32_t location = 0;
+    uint8_t writeByte = 0x5A;
+    uint8_t readByte1 = 0x00;
+    uint8_t readByte2 = 0x00;
+    uint8_t emptyData = 0xFF;
+    uint32_t randomAddr = 0;
+
+    deinitSd();
+
+    for (int numPages = 0; numPages < NUM_PAGES; numPages++) {
+        randomAddr = (rand() & 0x0FFF);
+        printf(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n"
+                       "testing erase page = [%X],  address = [0x%X]\r\n", numPages, (location + randomAddr));
+        // erase the page and check if the page is completely empty (0xFF)
+        TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage((uint8_t) (numPages)), "page not erased");
+        // write one byte and read it to check if data is in the storage
+        TEST_ASSERT_TRUE_MESSAGE(flashStorage.writeData((location + randomAddr), (const unsigned char *) (&writeByte),
+                                                        sizeof(writeByte)),
+                                 "failed to write to storage");
+        TEST_ASSERT_TRUE_MESSAGE(
+                flashStorage.readData((location + randomAddr), (unsigned char *) (&readByte1), sizeof(readByte1)),
+                "failed to read from storage");
+        TEST_ASSERT_EQUAL_HEX8_MESSAGE(writeByte, readByte1, "data read does not match written data");
+
+        // now erase the page and check if the page is completely empty (0xFF)
+        TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage((uint8_t) (numPages)), "page not erased");
+        TEST_ASSERT_TRUE_MESSAGE(
+                flashStorage.readData((location + randomAddr), (unsigned char *) (&readByte2), sizeof(readByte1)),
+                "failed to read from storage");
+        TEST_ASSERT_EQUAL_HEX8_MESSAGE(readByte2, emptyData, "data read does not match written data");
+        location += 0x1000;
+    }
+
+    initSd();
+}
+
+
+
+
 utest::v1::status_t greentea_failure_handler(const Case *const source, const failure_t reason) {
     greentea_case_failure_abort_handler(source, reason);
     return STATUS_CONTINUE;
 }
 
 Case cases[] = {
-//Case("Storage test true-0", TestTrue, greentea_failure_handler),
-Case("Storage test storage erase pages-0", TestStorageErasePages, greentea_failure_handler),
-Case("Storage test storage write subsequent bytes-0", TestStorageWriteSubsequentBytes, greentea_failure_handler),
-Case("Storage test storage write byte above end address-0", TestStorageWriteAboveEndAddress, greentea_failure_handler),
-Case("Storage test storage write buffer over page boarder-0", TestStorageWriteOverPageBoarder, greentea_failure_handler),
-Case("Storage test storage write big buffer-0", TestStorageWriteBigBuffer, greentea_failure_handler),
+        Case("Storage test storage erase pages-0", TestStorageErasePages, greentea_failure_handler),
+        Case("Storage test storage write subsequent bytes-0", TestStorageWriteSubsequentBytes,
+             greentea_failure_handler),
+        Case("Storage test storage write byte above end address-0", TestStorageWriteAboveEndAddress,
+             greentea_failure_handler),
+        Case("Storage test storage write buffer over page boarder-0", TestStorageWriteOverPageBoarder,
+             greentea_failure_handler),
+        Case("Storage test storage write big buffer-0", TestStorageWriteBigBuffer, greentea_failure_handler),
+        Case("Storage test storage write without SD-0", TestStorageDisabledSd, greentea_failure_handler),
+        Case("Storage test storage write over the upper bound-0", TestStorageWriteOverUpperBound,
+             greentea_failure_handler),
+        Case("Storage test storage erase pages without SD-0", TestStorageErasePagesDisabledSd,
+             greentea_failure_handler),
+
 };
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
+    NRF52FlashStorage flashStorage;
     static bool initialized = false;
     if (!initialized) {
         TEST_ASSERT_TRUE_MESSAGE(flashStorage.init(), "failed to initialize storage");
         initialized = true;
     }
-    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(), "failed to erase page");
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(0, NUM_PAGES), "failed to erase pages");
     GREENTEA_SETUP(150, "default_auto");
     return greentea_test_setup_handler(number_of_cases);
 }
@@ -183,12 +302,10 @@ void startTests(BLE::InitializationCompleteCallbackContext *params) {
     Harness::run(specification);
 }
 
-static Thread bleEventThread(osPriorityNormal, 24000);
-static EventQueue bleEventQueue(/* event count */ 16 * EVENTS_EVENT_SIZE);
-
-void scheduleBleEventsProcessing(BLE::OnEventsToProcessCallbackContext *context) {
-    bleEventQueue.call(Callback<void()>(&context->ble, &BLE::processEvents));
+void continueTests(BLE::InitializationCompleteCallbackContext *params) {
+    Harness::validate_callback();
 }
+
 
 int main() {
     wait_ms(100);
