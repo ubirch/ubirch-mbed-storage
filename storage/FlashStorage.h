@@ -66,32 +66,7 @@ extern "C" {
  */
 
 
-/*
- * flag for the callback, used to determine, when event handling is finished
- * so the rest of the program can continue
- */
-static uint8_t fs_callback_flag;
 
-
-inline static void fs_evt_handler(fs_evt_t const *const evt, fs_ret_t result) {
-    if (result != FS_SUCCESS) {
-        PRINTF("    fstorage event handler ERROR   \r\n");
-    } else {
-        fs_callback_flag = 0;
-    }
-};
-
-/*
- * set the configuration
- */
-FS_REGISTER_CFG(fs_config_t fs_config) =
-        {
-                .p_start_addr = 0,                // DUMMY
-                .p_end_addr = (const uint32_t *) PAGE_SIZE_WORDS,    // DUMMY
-                .callback  = fs_evt_handler, // Function for event callbacks.
-                .num_pages = NUM_PAGES,      // Number of physical flash pages required.
-                .priority  = 0xFE            // Priority for flash usage. // TODO check priority
-        };
 
 class FlashStorage {
 
@@ -108,18 +83,18 @@ public:
      ~FlashStorage() {};
 
     /*!
-     * @brief  Initialize the key storage
+     * Initialize the key storage
      * to enable a secure data storage of the size, described in the configuration
-     *                                                                                                                                                                                                            Cal
+     *
      * @note	the initialization only works, if the soft device and the event
      * 			handler are enabled
      *
      * @return 	int 	true, if initialization successful, else false
      */
-    virtual bool init(void) = 0;
+    virtual bool init() = 0;
 
     /*!
-     * @brief  Read data from the key storage
+     * Read data from the key storage
      *
      * @param p_location	location (pointer) inside the configured data space (32 Bit)
      * @param *buffer		pointer to the buffer, where the data will be filled in (8 Bit
@@ -129,14 +104,15 @@ public:
      */
     virtual bool readData(uint32_t p_location, unsigned char *buffer, uint16_t length8) = 0;
 
-    /** Erase a page in the key storage
+    /*!
+     * Erase a page in the key storage
      *
      * @return int 			true, if erasing succeeded, else false
      */
-    virtual bool erasePage(uint8_t page = 0, uint8_t numPages = 1) = 0;
+    virtual bool erasePage(uint8_t page, uint8_t numPages) = 0;
 
     /*!
-     * @brief  Write data to the key storage
+     * Write data to the key storage
      *
      * @param p_location 	location (pointer) inside the configured data space (32 Bit)
      * @param *buffer		pointer to the buffer with the data (8 Bit)
@@ -147,7 +123,7 @@ public:
     virtual bool writeData(uint32_t p_location, const unsigned char *buffer, uint16_t length8) = 0;
 
     /*!
-     * @brief Convert 32 Bit array into 8 bit array.
+     * Convert 32 Bit array into 8 bit array.
      *
      * @param *d32			pointer to 32 Bit data array (input)
      * @param *d8 			pointer to 8 Bit data array (output)
@@ -158,7 +134,7 @@ public:
     bool conv32to8(const uint32_t *d32, unsigned char *d8, uint16_t length8);
 
     /*!
-     * @brief Convert 8 Bit array into 32 Bit array
+     * Convert 8 Bit array into 32 Bit array
      *
      * @param *d8 			pointer to 8 Bit data array (input)
      * @param *d32			pointer to 32 Bit data array (output)
@@ -171,18 +147,18 @@ public:
 
 public:
     /*!
-     * @brief   Get the start address of the storage.
+     * Get the start address of the storage.
      *
      * @return  start address (32 Bit)
      */
-    uint32_t getStartAddress(void);
+    virtual uint32_t getStartAddress() = 0;
 
     /*!
-     * @brief   Get the end address of the storage.
+     * Get the end address of the storage.
      *
      * @return end address (32 Bit)
      */
-    uint32_t getEndAddress(void);
+    virtual uint32_t getEndAddress() = 0;
 
 };
 #ifdef __cplusplus

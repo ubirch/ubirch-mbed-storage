@@ -32,38 +32,66 @@
  *  For more information about the key-storage,
  *  see documentation for mbed fstorage
  */
-
 #include "FlashStorage.h"
 #include <nrf_soc.h>
-#include <cstdio>
-#include <malloc.h>
-#include <fstorage.h>
+#include <BLE.h>
+#include <EventQueue.h>
 #include "NRF52FlashStorage.h"
+
+#include "mbed.h"
+
+extern "C" {
+#include <softdevice_handler.h>
+
+}
+
 
 //#define PRINTF(...)
 #define PRINTF printf
 
 // TODO, maybe separate the storage into two different storages, for secure and not secure data
 
-///*
-// * flag for the callback, used to determine, when event handling is finished
-// * so the rest of the program can continue
-// */
-//extern static uint8_t fs_callback_flag;
-//
-//
-//extern static void fs_evt_handler;/*(fs_evt_t const *const evt, fs_ret_t result) {
-//    if (result != FS_SUCCESS) {
-//        PRINTF("    fstorage event handler ERROR   \r\n");
-//    } else {
-//        fs_callback_flag = 0;
-//    }
-//} */
+static Thread *sdEventThread;//(osPriorityNormal);
+static EventQueue *sdEventQueue;
+
+static void scheduleBleSdEventsProcessing(BLE::OnEventsToProcessCallbackContext *context) {
+    sdEventQueue->call(Callback<void()>(&context->ble, &BLE::processEvents));
+}
+
+static void initBleSdComplete(BLE::InitializationCompleteCallbackContext *params) {
+    BLE &ble = params->ble;
+    ble_error_t error = params->error;
+
+    if (error != BLE_ERROR_NONE) {
+        PRINTF("SD BLE error \r\n");
+        return;
+    }
+
+    if (ble.getInstanceID() != BLE::DEFAULT_INSTANCE) {
+        return;
+    }
+}
+
+/*
+* flag for the callback, used to determine, when event handling is finished
+* so the rest of the program can continue
+*/
+static uint8_t fs_callback_flag;
+
+
+inline static void fs_evt_handler(fs_evt_t const *const evt, fs_ret_t result) {
+    (void) evt;
+    if (result != FS_SUCCESS) {
+        PRINTF("    fstorage event handler ERROR   \r\n");
+    } else {
+        fs_callback_flag = 0;
+    }
+};
 
 /*
  * set the configuration
  */
-extern fs_config_t fs_config;/* =
+FS_REGISTER_CFG(fs_config_t fs_config) =
         {
                 .p_start_addr = 0,                // DUMMY
                 .p_end_addr = (const uint32_t *) PAGE_SIZE_WORDS,    // DUMMY
@@ -71,9 +99,41 @@ extern fs_config_t fs_config;/* =
                 .num_pages = NUM_PAGES,      // Number of physical flash pages required.
                 .priority  = 0xFE            // Priority for flash usage. // TODO check priority
         };
-*/
 
-bool NRF52FlashStorage::init(){
+
+ble_error_t NRF52FlashStorage::initBleSd() {
+    this->init();
+    if (softdevice_handler_isEnabled()) {
+        PRINTF("BLE is active \r\n");
+        return BLE_ERROR_NONE;
+    } else {
+        PRINTF("BLE not active \r\n");
+        activatedSdStatus = true;
+        sdEventQueue = new EventQueue(/* event count */ 4 * EVENTS_EVENT_SIZE);
+        sdEventThread = new Thread(osPriorityNormal);
+        sdEventThread->start(callback(sdEventQueue, &EventQueue::dispatch_forever));
+        BLE &ble = BLE::Instance();
+        ble.onEventsToProcess(scheduleBleSdEventsProcessing);
+        return ble.init(initBleSdComplete);
+    }
+}
+
+
+void NRF52FlashStorage::deinitBleSd() {
+    if (activatedSdStatus) {
+        activatedSdStatus = false;
+        if (BLE::Instance().hasInitialized()) {
+            BLE::Instance().shutdown();
+            sdEventThread->terminate();
+            sdEventThread->join();
+            delete sdEventThread;
+            delete sdEventQueue;
+        }
+    }
+}
+
+
+bool NRF52FlashStorage::init() {
     /*
      * initialize the storage and check for success
      */
@@ -88,7 +148,7 @@ bool NRF52FlashStorage::init(){
 }
 
 
-bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uint16_t length8){
+bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uint16_t length8) {
     if (buffer == NULL || length8 == 0) {
         return false;
     }
@@ -127,9 +187,10 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
 
 bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
     // Erase one page (page 0).
-    PRINTF("Erasing a flash page at address 0x%X\r\n", (uint32_t)(fs_config.p_start_addr + (PAGE_SIZE_WORDS * page)));
+    PRINTF("Erasing a flash page at address 0x%X\r\n", (uint32_t) (fs_config.p_start_addr + (PAGE_SIZE_WORDS * page)));
 
-    //TODO check if softdevice is enabled
+    this->initBleSd();
+
     fs_callback_flag = 1;
     fs_ret_t ret = fs_erase(&fs_config, fs_config.p_start_addr + (PAGE_SIZE_WORDS * page), numPages);
     if (ret != FS_SUCCESS) {
@@ -139,11 +200,13 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
         PRINTF("    fstorage ERASE successful    \r\n");
     }
     while (fs_callback_flag == 1) /* do nothing */ ;
+
+    this->deinitBleSd();
     return true;
 }
 
 
-bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buffer, uint16_t length8){
+bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buffer, uint16_t length8) {
     if (buffer == NULL || length8 == 0) {
         PRINTF("ERROR NULL  \r\n");
         return false;
@@ -183,23 +246,25 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
     // convert the data into 32 bit array
     uint16_t length32 = lengthReal >> 2;
     uint32_t buf32[length32];
-    // TODO check if copying here is absolutely necessary
     if (!this->conv8to32(bufferReal, buf32, lengthReal)) {
         PRINTF("ERROR CONVERSION \r\n");
         return false;            // ERROR
     }
 
     //Write the buffer into flash
-    PRINTF("Writing data to addr =[0x%X], num =[0x%X], data =[0x ", ((uint32_t) fs_config.p_start_addr + locationReal), lengthReal);
+    PRINTF("Writing data to addr =[0x%X], num =[0x%X], data =[0x ", ((uint32_t) fs_config.p_start_addr + locationReal),
+           lengthReal);
     for (int m = 0; m < length32; m++) {
         PRINTF(" %X", buf32[m]);
     }
     PRINTF("]\r\n");
 
-    //TODO check if softdevice is enabled
+    fs_ret_t ret;
+    this->initBleSd();
+
     fs_callback_flag = 1;
-    fs_ret_t ret = fs_store(&fs_config, (fs_config.p_start_addr + (locationReal >> 2)), buf32,
-                            length32);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
+    ret = fs_store(&fs_config, (fs_config.p_start_addr + (locationReal >> 2)), buf32,
+                   length32);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
     if (ret != FS_SUCCESS) {
         PRINTF("    fstorage WRITE ERROR    \r\n");
         return false;
@@ -207,52 +272,16 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
         PRINTF("    fstorage WRITE successful    \r\n");
     }
     while (fs_callback_flag == 1) /* do nothing */;
+
+    this->deinitBleSd();
     return true;
 }
-//
-//
-//bool FlashStorage::conv8to32(const unsigned char *d8, uint32_t *d32, uint16_t length8){
-//    if (d8 == NULL || d32 == NULL || length8 == 0) {
-//        return false;
-//    }
-//
-//    for (int i = 0; i < (length8 >> 2); ++i) {
-//        d32[i] = (uint32_t) ((d8[(i << 2) + 3] << 24) | (d8[(i << 2) + 2] << 16) | (d8[(i << 2) + 1] << 8) |
-//                             (d8[(i << 2)]));
-//    }
-//    return true;
-//// TODO pad the end with 0 align to 4 Bytes
-//}
-//
-//
-//bool FlashStorage::conv32to8(const uint32_t *d32, unsigned char *d8, uint16_t length8){
-//    if (d8 == NULL || d32 == NULL || length8 == 0) {
-//        return false;
-//    }
-//    uint32_t temp;                            // temporary data storage
-//    for (uint16_t j = 0; j < (length8 >> 2); ++j) {
-//        temp = d32[j];
-//        for (int i = 0; i < 4; ++i) {
-//            d8[(j << 2) + i] = (unsigned char) (temp & 0xFF);
-//            temp >>= 8;
-//        }
-//    }
-//    return true;
-//// TODO pad the end with 0 alagn to 4 Bytes
-//}
-//
-//uint32_t FlashStorage::getStartAddress(){
-//    return (uint32_t) (fs_config.p_start_addr);
-//}
-//
-//uint32_t FlashStorage::getEndAddress(){
-//    return (uint32_t) (fs_config.p_end_addr);
-//}
 
-//NRF52FlashStorage::NRF52FlashStorage() {
-//
-//}
+uint32_t NRF52FlashStorage::getStartAddress() {
+    return (uint32_t) (fs_config.p_start_addr);
+}
 
-//NRF52FlashStorage::~NRF52FlashStorage() {
-//
-//}
+uint32_t NRF52FlashStorage::getEndAddress() {
+    return (uint32_t) (fs_config.p_end_addr);
+}
+
