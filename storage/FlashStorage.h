@@ -38,11 +38,9 @@
 
 #include <cstdio>
 
-#ifdef __cplusplus
 extern "C" {
-#endif
-
 #include <fstorage.h>
+}
 
 //#define PRINTF(...)
 #define PRINTF printf
@@ -161,8 +159,5 @@ public:
     virtual uint32_t getEndAddress() = 0;
 
 };
-#ifdef __cplusplus
-}
-#endif
 
 #endif //UBIRCH_FLASH_STORAGE_H

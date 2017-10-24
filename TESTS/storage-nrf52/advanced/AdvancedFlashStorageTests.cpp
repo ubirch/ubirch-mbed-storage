@@ -58,10 +58,6 @@ int deinitSd() {
 
 //NRF52FlashStorage flashStorage;
 
-void TestTrue() {
-    TEST_ASSERT_TRUE_MESSAGE(true, "this is just to make it work");
-}
-
 void TestStorageWriteSubsequentBytes() {
     NRF52FlashStorage flashStorage;
     uint32_t location = 0x00;
@@ -273,7 +269,6 @@ utest::v1::status_t greentea_failure_handler(const Case *const source, const fai
 }
 
 Case cases[] = {
-        Case("Storage test true-0", TestTrue, greentea_failure_handler),
         Case("Storage test storage erase pages-0", TestStorageErasePages, greentea_failure_handler),
         Case("Storage test storage write subsequent bytes-0", TestStorageWriteSubsequentBytes,
              greentea_failure_handler),

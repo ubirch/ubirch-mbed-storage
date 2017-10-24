@@ -173,9 +173,8 @@ include_directories(${MBED_OS})
 
 add_library(storage
         storage/FlashStorage.cpp
-        storage/FlashStorage.h
-        storage/NRF52FlashStorage.cpp
-        storage/NRF52FlashStorage.h)
+        storage/NRF52FlashStorage.cpp)
+
 target_include_directories(storage PUBLIC storage)
 
 add_executable(test-nrf52-basic
