@@ -42,6 +42,7 @@ extern "C" {
 #endif
 
 #include <fstorage.h>
+#include <blecommon.h>
 #include "FlashStorage.h"
 
 #define NUM_PAGES 4

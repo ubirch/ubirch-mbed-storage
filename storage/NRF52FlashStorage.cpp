@@ -102,7 +102,6 @@ FS_REGISTER_CFG(fs_config_t fs_config) =
 
 
 ble_error_t NRF52FlashStorage::initBleSd() {
-    this->init();
     if (softdevice_handler_isEnabled()) {
         PRINTF("BLE is active \r\n");
         return BLE_ERROR_NONE;
@@ -167,7 +166,7 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
     PRINTF("Data read from flash address 0x%X: ", ((uint32_t) fs_config.p_start_addr) + locationReal);
     for (uint16_t i = 0; i < length32; i++) {
         buf32[i] = *(fs_config.p_start_addr + (locationReal >> 2) + i);
-//        PRINTF("(%u)[0x%X] = %X \r\n", i, (fs_config.p_start_addr + (locationReal >> 2) + i), buf32[i]);
+        PRINTF("(%u)[0x%X] = %X \r\n", i, (fs_config.p_start_addr + (locationReal >> 2) + i), buf32[i]);
     }
     PRINTF("\r\n");
 
