@@ -46,8 +46,8 @@ extern "C" {
 }
 
 
-//#define PRINTF(...)
-#define PRINTF printf
+#define PRINTF(...)
+//#define PRINTF printf
 
 // TODO, maybe separate the storage into two different storages, for secure and not secure data
 

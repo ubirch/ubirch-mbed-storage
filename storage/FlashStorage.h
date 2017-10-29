@@ -42,8 +42,10 @@ extern "C" {
 #include <fstorage.h>
 }
 
-//#define PRINTF(...)
-#define PRINTF printf
+#ifndef PRINTF
+#define PRINTF(...)
+//#define PRINTF printf
+#endif
 
 #define NUM_PAGES 4
 
