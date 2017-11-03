@@ -45,7 +45,9 @@ extern "C" {
 #include <blecommon.h>
 #include "FlashStorage.h"
 
-#define NUM_PAGES 4
+#ifndef STORAGE_PAGES
+#define STORAGE_PAGES 4
+#endif
 
 #if defined (NRF52)
 #define PAGE_SIZE_WORDS 1024

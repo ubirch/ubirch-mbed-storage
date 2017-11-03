@@ -42,18 +42,6 @@ extern "C" {
 #include <fstorage.h>
 }
 
-#ifndef PRINTF
-#define PRINTF(...)
-//#define PRINTF printf
-#endif
-
-#define NUM_PAGES 4
-
-#if defined (NRF52)
-#define PAGE_SIZE_WORDS 1024
-#endif
-
-
 /** Interface for secure flash storage access via key storage
  *
  * @code

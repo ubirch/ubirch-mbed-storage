@@ -96,7 +96,7 @@ FS_REGISTER_CFG(fs_config_t fs_config) =
                 .p_start_addr = 0,                // DUMMY
                 .p_end_addr = (const uint32_t *) PAGE_SIZE_WORDS,    // DUMMY
                 .callback  = fs_evt_handler, // Function for event callbacks.
-                .num_pages = NUM_PAGES,      // Number of physical flash pages required.
+                .num_pages = STORAGE_PAGES,      // Number of physical flash pages required.
                 .priority  = 0xFE            // Priority for flash usage. // TODO check priority
         };
 
