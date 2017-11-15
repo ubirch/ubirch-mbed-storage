@@ -55,6 +55,14 @@ int deinitSd() {
     return 0;
 }
 
+struct __attribute__ ((packed)) Entry {
+    time_t timestamp;       //!< the timestamp of the measurement
+    uint16_t temperature;   //!< the temperature in degrees celsius
+};
+
+bool operator==(const Entry &lhs, const Entry &rhs) {
+    return lhs.timestamp == rhs.timestamp && lhs.temperature == rhs.temperature;
+}
 
 //NRF52FlashStorage flashStorage;
 
@@ -155,7 +163,7 @@ void TestStorageErasePages(){
     uint8_t emptyData = 0xFF;
     uint32_t randomAddr = 0;
 
-    for (int numPages = 0; numPages < NUM_PAGES; numPages++) {
+    for (int numPages = 0; numPages < STORAGE_PAGES; numPages++) {
         randomAddr = (rand() & 0x0FFF);
         printf(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n"
                        "testing erase page = [%X],  address = [0x%X]\r\n", numPages, (location + randomAddr));
@@ -178,7 +186,7 @@ void TestStorageErasePages(){
 void TestStorageWriteOverUpperBound(){
     NRF52FlashStorage flashStorage;
     uint16_t length = 0x20;
-    uint32_t location = NUM_PAGES * 0x1000 - (length >> 1);
+    uint32_t location = STORAGE_PAGES * 0x1000 - (length >> 1);
     uint8_t writeData[length];
     uint8_t readData[length];
 
@@ -233,7 +241,7 @@ void TestStorageErasePagesDisabledSd() {
 
     deinitSd();
 
-    for (int numPages = 0; numPages < NUM_PAGES; numPages++) {
+    for (int numPages = 0; numPages < STORAGE_PAGES; numPages++) {
         randomAddr = (rand() & 0x0FFF);
         printf(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n"
                        "testing erase page = [%X],  address = [0x%X]\r\n", numPages, (location + randomAddr));
@@ -260,6 +268,31 @@ void TestStorageErasePagesDisabledSd() {
     initSd();
 }
 
+void TestStorageStructWriteRead() {
+    NRF52FlashStorage flashStorage;
+
+    uint16_t address = STORAGE_PAGES * 1024 - 99;
+
+    Entry EArray;
+    EArray.temperature = 3655;
+    EArray.timestamp = 0x12345678;
+//    EArray[1]->temperature = 2100;
+//    EArray[1]->timestamp = 0x87654321;
+
+    Entry EArrayRead;
+
+    // write one byte and read it to check if data is in the storage
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.writeData((address), (const unsigned char *) (&EArray),
+                                                    sizeof(EArray)),
+                             "failed to write to storage");
+    TEST_ASSERT_TRUE_MESSAGE(
+            flashStorage.readData((address), (unsigned char *) (&EArrayRead), sizeof(EArrayRead)),
+            "failed to read from storage");
+    TEST_ASSERT_TRUE_MESSAGE(EArray == EArrayRead,
+                             "data read does not match written data");
+
+}
+
 
 
 
@@ -282,6 +315,9 @@ Case cases[] = {
              greentea_failure_handler),
         Case("Storage test storage erase pages without SD-0", TestStorageErasePagesDisabledSd,
              greentea_failure_handler),
+        Case("Storage test storage write read Struct-0", TestStorageStructWriteRead,
+             greentea_failure_handler),
+
 
 };
 
@@ -292,7 +328,7 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
         TEST_ASSERT_TRUE_MESSAGE(flashStorage.init(), "failed to initialize storage");
         initialized = true;
     }
-    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(0, NUM_PAGES), "failed to erase pages");
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(0, STORAGE_PAGES), "failed to erase pages");
     GREENTEA_SETUP(150, "default_auto");
     return greentea_test_setup_handler(number_of_cases);
 }

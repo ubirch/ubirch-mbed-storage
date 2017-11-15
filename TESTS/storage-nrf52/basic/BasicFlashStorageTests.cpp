@@ -196,7 +196,7 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
         TEST_ASSERT_TRUE_MESSAGE(flashStorage.init(), "failed to initialze storage");
         initialized = true;
     }
-    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(0, NUM_PAGES), "failed to erase page");
+    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(0, STORAGE_PAGES), "failed to erase page");
     GREENTEA_SETUP(150, "default_auto");
     return greentea_test_setup_handler(number_of_cases);
 }
@@ -215,6 +215,7 @@ void scheduleBleEventsProcessing(BLE::OnEventsToProcessCallbackContext *context)
 
 int main() {
     wait_ms(100);
+    printf("hallo\r\n");
 
     // set the storage address (exclude bootloader area)
     NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Wen << NVMC_CONFIG_WEN_Pos;
