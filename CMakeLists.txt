@@ -17,7 +17,7 @@ set(BOARD NRF52_DK)
 set(FEATURES frameworks)
 
 add_definitions(
-        -DTOOLCHAIN_GCC
+        -DTOOLCHAIN_GCCmbed
         -DNRF52
         -D${MCU}
         -DTARGET_${TARGET}
@@ -177,11 +177,17 @@ add_library(storage
 
 target_include_directories(storage PUBLIC storage)
 
-add_executable(test-nrf52-basic
-        TESTS/storage-nrf52/basic/BasicFlashStorageTests.cpp
-        TESTS/storage-nrf52/advanced/AdvancedFlashStorageTests.cpp)
+add_library(trackle
+        trackle/TrackleStorage.cpp)
 
-target_link_libraries(test-nrf52-basic mbed-os storage)
+target_include_directories(trackle PUBLIC trackle)
+
+add_executable(test-nrf52
+        TESTS/storage-nrf52/basic/BasicFlashStorageTests.cpp
+        TESTS/storage-nrf52/advanced/AdvancedFlashStorageTests.cpp
+        TESTS/storage-nrf52/trackle/TrackleFlashStorageTests.cpp)
+
+target_link_libraries(test-nrf52 mbed-os storage trackle)
 
 add_custom_target(run-tests ALL
         COMMAND mbed test -n tests-storage-nrf52*

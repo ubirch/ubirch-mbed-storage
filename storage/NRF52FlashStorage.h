@@ -46,12 +46,16 @@ extern "C" {
 #include "FlashStorage.h"
 
 #ifndef STORAGE_PAGES
-#define STORAGE_PAGES 4
+#define STORAGE_PAGES 5
 #endif
 
 #if defined (NRF52)
 #define PAGE_SIZE_WORDS 1024
+#define PAGE_SIZE_BYTES sizeof(uint32_t) * PAGE_SIZE_WORDS
 #endif
+
+//#define PRINTF(...)
+#define PRINTF printf
 
 
 /** Interface for secure flash storage access via key storage
@@ -99,6 +103,8 @@ public:
      * @return int 			true, if reading successful, else false
      */
     bool readData(uint32_t p_location, unsigned char *buffer, uint16_t length8);
+
+    uint32_t scanData(uint32_t p_location, unsigned char *needle, uint16_t length);
 
     /*!
      * Erase a page in the key storage
