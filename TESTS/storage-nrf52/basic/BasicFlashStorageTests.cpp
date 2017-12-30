@@ -30,6 +30,10 @@
 #include "unity/unity.h"
 #include "greentea-client/test_env.h"
 
+#ifndef NUM_PAGES
+#define NUM_PAGES   1
+#endif
+
 using namespace utest::v1;
 
 void TestStorageWriteWord() {
@@ -190,18 +194,19 @@ Case("Storage test storage write non-aligned-0", TestStorageWriteNonAligned, gre
 };
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
-    NRF52FlashStorage flashStorage;
-    static bool initialized = false;
-    if (!initialized) {
-        TEST_ASSERT_TRUE_MESSAGE(flashStorage.init(), "failed to initialze storage");
-        initialized = true;
-    }
-    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(0, NUM_PAGES), "failed to erase page");
     GREENTEA_SETUP(150, "default_auto");
     return greentea_test_setup_handler(number_of_cases);
 }
 
 void startTests(BLE::InitializationCompleteCallbackContext *params) {
+    NRF52FlashStorage flashStorage;
+    static bool initialized = false;
+    if (!initialized) {
+        flashStorage.init();
+        initialized = true;
+    }
+    flashStorage.erasePage(0, NUM_PAGES);
+
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
     Harness::run(specification);
 }

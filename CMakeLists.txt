@@ -184,9 +184,9 @@ add_executable(test-nrf52-basic
 target_link_libraries(test-nrf52-basic mbed-os storage)
 
 add_custom_target(run-tests ALL
-        COMMAND mbed test -n tests-storage-nrf52*
+        COMMAND mbed test -v -n tests-storage-nrf52* --app-config TESTS/settings.json
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 add_custom_target(debug-tests ALL
-        COMMAND mbed test -n tests-storage-nrf52* -vv --profile mbed-os/tools/profiles/debug.json
+        COMMAND mbed test -vv -n tests-storage-nrf52* --app-config TESTS/settings.json --profile mbed-os/tools/profiles/debug.json
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

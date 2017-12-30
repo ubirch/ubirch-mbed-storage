@@ -30,6 +30,10 @@
 #include "unity/unity.h"
 #include "greentea-client/test_env.h"
 
+#ifndef NUM_PAGES
+#define NUM_PAGES   1
+#endif
+
 using namespace utest::v1;
 
 static Thread bleEventThread(osPriorityNormal, 24000);
@@ -286,18 +290,19 @@ Case cases[] = {
 };
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
-    NRF52FlashStorage flashStorage;
-    static bool initialized = false;
-    if (!initialized) {
-        TEST_ASSERT_TRUE_MESSAGE(flashStorage.init(), "failed to initialize storage");
-        initialized = true;
-    }
-    TEST_ASSERT_TRUE_MESSAGE(flashStorage.erasePage(0, NUM_PAGES), "failed to erase pages");
     GREENTEA_SETUP(150, "default_auto");
     return greentea_test_setup_handler(number_of_cases);
 }
 
 void startTests(BLE::InitializationCompleteCallbackContext *params) {
+    NRF52FlashStorage flashStorage;
+    static bool initialized = false;
+    if (!initialized) {
+        flashStorage.init();
+        initialized = true;
+    }
+    flashStorage.erasePage(0, NUM_PAGES);
+
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
     Harness::run(specification);
 }
@@ -308,8 +313,6 @@ void continueTests(BLE::InitializationCompleteCallbackContext *params) {
 
 
 int main() {
-    wait_ms(100);
-
     // set the storage address (exclude bootloader area)
     NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Wen << NVMC_CONFIG_WEN_Pos;
     while (NRF_NVMC->READY == NVMC_READY_READY_Busy) {}
