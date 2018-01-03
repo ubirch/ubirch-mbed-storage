@@ -76,7 +76,7 @@ static void initBleSdComplete(BLE::InitializationCompleteCallbackContext *params
 * flag for the callback, used to determine, when event handling is finished
 * so the rest of the program can continue
 */
-static uint8_t fs_callback_flag;
+static volatile uint8_t fs_callback_flag;
 
 
 inline static void fs_evt_handler(fs_evt_t const *const evt, fs_ret_t result) {
