@@ -77,6 +77,8 @@ FS_REGISTER_CFG(fs_config_t fs_config) =
         };
 
 
+// adapted from an example found here:
+// https://devzone.nordicsemi.com/question/54763/sd_flash_write-implementation-without-softdevice/
 static fs_ret_t nosd_erase_page(const uint32_t *page_address, uint32_t num_pages) {
     if (page_address == NULL) {
         return FS_ERR_NULL_ARG;
