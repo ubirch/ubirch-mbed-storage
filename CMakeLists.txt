@@ -153,7 +153,7 @@ set(MBED_OS
         mbed-os
         )
 
-set(MBED_OS_SRCS "")
+set(MBED_OS_SRCS "" TESTS/storage-nrf52/BasicFlashStorageTests.h)
 foreach (DIR in ${MBED_OS})
     if (DIR MATCHES "mbed-os/features")
         foreach (FEATURE in ${FEATURES})
@@ -178,13 +178,19 @@ add_library(storage
 target_include_directories(storage PUBLIC storage)
 
 add_executable(test-nrf52-basic
+        TESTS/storage-nrf52/BasicFlashStorageTests.h
+        TESTS/storage-nrf52/AdvancedFlashStorageTests.h
         TESTS/storage-nrf52/basic/BasicFlashStorageTests.cpp
-        TESTS/storage-nrf52/advanced/AdvancedFlashStorageTests.cpp)
+        TESTS/storage-nrf52/basic-nosd/BasicFlashStorageTestsNoSD.cpp
+        TESTS/storage-nrf52/advanced/AdvancedFlashStorageTests.cpp
+        TESTS/storage-nrf52/advanced-nosd/AdvancedFlashStorageTestsNoSD.cpp
+        TESTS/storage-nrf52/nosd/NoSDFlashStorageTest.cpp
+        )
 
 target_link_libraries(test-nrf52-basic mbed-os storage)
 
 add_custom_target(run-tests ALL
-        COMMAND mbed test -v -n tests-storage-nrf52* --app-config TESTS/settings.json
+        COMMAND mbed test -c -n tests-storage-nrf52* --app-config TESTS/settings.json
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 add_custom_target(debug-tests ALL

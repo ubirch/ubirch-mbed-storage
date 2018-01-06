@@ -105,7 +105,7 @@ public:
      *
      * @return int 			true, if erasing succeeded, else false
      */
-    bool erasePage(uint8_t page = 0, uint8_t numPages = 1);
+    bool erasePage(uint8_t page, uint8_t numPages);
 
     /*!
      * Write data to the key storage
