@@ -238,16 +238,18 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
     if (softdevice_handler_isEnabled()) {
         fs_callback_flag = 1;
         ret = fs_erase(&fs_config, fs_config.p_start_addr + (PAGE_SIZE_WORDS * page), numPages);
-        if (ret != FS_SUCCESS) {
-            PRINTF("    fstorage ERASE ERROR    \r\n");
-            return false;
-        } else {
-            PRINTF("    fstorage ERASE successful    \r\n");
-        }
         while (fs_callback_flag == 1) /* do nothing */ ;
     } else {
         ret = nosd_erase_page(fs_config.p_start_addr + (PAGE_SIZE_WORDS * page), numPages);
     }
+
+    if (ret != FS_SUCCESS) {
+        PRINTF("    fstorage ERASE ERROR    \r\n");
+        return false;
+    } else {
+        PRINTF("    fstorage ERASE successful    \r\n");
+    }
+
     return ret == FS_SUCCESS;
 }
 
@@ -315,16 +317,18 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
         fs_callback_flag = 1;
         ret = fs_store(&fs_config, (fs_config.p_start_addr + (locationReal >> 2)), buf32,
                        length32);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
-        if (ret != FS_SUCCESS) {
-            PRINTF("    fstorage WRITE ERROR    \r\n");
-            return false;
-        } else {
-            PRINTF("    fstorage WRITE successful    \r\n");
-        }
         while (fs_callback_flag == 1) /* do nothing */;
     } else {
         ret = nosd_store((uint32_t *) (fs_config.p_start_addr + (locationReal >> 2)), buf32, length32);
     }
+
+    if (ret != FS_SUCCESS) {
+        PRINTF("    fstorage WRITE ERROR    \r\n");
+        return false;
+    } else {
+        PRINTF("    fstorage WRITE successful    \r\n");
+    }
+
     return ret == FS_SUCCESS;
 }
 

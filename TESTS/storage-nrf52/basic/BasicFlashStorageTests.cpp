@@ -2,7 +2,7 @@
  * nRF52 flash storage library tests.
  *
  * @author Matthias L. Jugel
- * @date 20179-27
+ * @date 2017-09-27
  *
  * Copyright 2017 ubirch GmbH (https://ubirch.com)
  *
