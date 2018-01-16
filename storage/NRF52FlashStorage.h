@@ -54,8 +54,8 @@ extern "C" {
 #define PAGE_SIZE_BYTES sizeof(uint32_t) * PAGE_SIZE_WORDS
 #endif
 
-//#define PRINTF(...)
-#define PRINTF printf
+#define PRINTF(...)
+//#define PRINTF printf
 
 
 /** Interface for secure flash storage access via key storage

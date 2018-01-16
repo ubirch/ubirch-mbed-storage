@@ -25,6 +25,7 @@
 #include <BLE.h>
 #include <nrf52_bitfields.h>
 #include <NRF52FlashStorage.h>
+#include <TrackleStorage.h>
 
 #include "utest/utest.h"
 #include "unity/unity.h"
@@ -55,14 +56,6 @@ int deinitSd() {
     return 0;
 }
 
-struct __attribute__ ((packed)) Entry {
-    time_t timestamp;       //!< the timestamp of the measurement
-    uint16_t temperature;   //!< the temperature in degrees celsius
-};
-
-bool operator==(const Entry &lhs, const Entry &rhs) {
-    return lhs.timestamp == rhs.timestamp && lhs.temperature == rhs.temperature;
-}
 
 //NRF52FlashStorage flashStorage;
 

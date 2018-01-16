@@ -71,25 +71,41 @@ public:
     }
 
     unsigned int getMeasOffset() const {
-        return measOffset;
+        return measAddressOffset;
     }
 
     unsigned int getSettingsOffset() const {
-        return settingsOffset;
+        return settingsAddressOffset;
     }
 
 protected:
     using TrackleStorage::measCounter;
 
-    using TrackleStorage::measOffset;
+    using TrackleStorage::measAddressOffset;
 
-    using TrackleStorage::pageOffsetMeas;
+    using TrackleStorage::measPageOffset;
 
-    using TrackleStorage::settingsOffset;
+    using TrackleStorage::settingsAddressOffset;
 
-    using TrackleStorage::pageOffsetSettings;
+    using TrackleStorage::settingsPageOffset;
 };
 //NRF52FlashStorage flashStorage;
+
+void TestMeasurementLoadMeasurement() {
+    TrackleStorage storage;
+    storage.init();
+
+    Entry storeEntry = {};
+    Entry loadEntry = {};
+
+    storeEntry.timestamp = 0x12345678;
+    storeEntry.temperature = 0x7777;
+
+    TEST_ASSERT_TRUE_MESSAGE(storage.storeMeas(storeEntry), "failed to store the measurement");
+    loadEntry = storage.loadMeas(storage.sizeMeas() - 1);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE((char *) (&storeEntry), (char *) (&loadEntry), sizeof(storeEntry),
+                                         "stored and loaded measuremnts are not equal");
+}
 
 void TestMeasurementStorageFull() {
     publicTrackleStorage storage;
@@ -124,10 +140,8 @@ void TestMeasurementStorageFull() {
 }
 
 control_t TestSettingsWriteStorage(const size_t n) {
-    publicTrackleStorage storage;
+    TrackleStorage storage;
     storage.init();
-
-//    TEST_ASSERT_TRUE_MESSAGE(storage.eraseSettings(), " failed to erase settings storage");
 
     Settings settings = {};
     settings.magicNumber = SETTING_MAGIC_NUMBER_VALID;
@@ -141,10 +155,34 @@ control_t TestSettingsWriteStorage(const size_t n) {
     settings.param7 = 0x07070707;
     settings.param8 = 0x08080808;
     settings.param9 = 0x09090909;
-    settings.param10 = 0xA0A0A0A0;
+    settings.param10 = 0x0A0A0A0A;
 
     TEST_ASSERT_TRUE_MESSAGE(storage.storeSettings(settings), " failed to store the settings");
-    return n < 3 ? CaseRepeatAll : CaseNext;
+    return n < 100 ? CaseRepeatAll : CaseNext;
+}
+
+void TestSettingsLoadStorage() {
+    TrackleStorage storage;
+
+    Settings setStore = {};
+    Settings setLoad = {};
+    setStore.magicNumber = SETTING_MAGIC_NUMBER_VALID;
+    setStore.length = sizeof(setStore);
+    setStore.param1 = 0x10101010;
+    setStore.param2 = 0x20202020;
+    setStore.param3 = 0x30303030;
+    setStore.param4 = 0x40404040;
+    setStore.param5 = 0x50505050;
+    setStore.param6 = 0x60606060;
+    setStore.param7 = 0x70707070;
+    setStore.param8 = 0x80808080;
+    setStore.param9 = 0x90909090;
+    setStore.param10 = 0xA0A0A0A0;
+
+    TEST_ASSERT_TRUE_MESSAGE(storage.storeSettings(setStore), " failed to store the settings");
+    setLoad = storage.loadSettings();
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE((char *) (&setStore), (char *) (&setLoad), sizeof(setStore),
+                                         " stored and loaded settings not equal");
 }
 
 
@@ -154,9 +192,11 @@ utest::v1::status_t greentea_failure_handler(const Case *const source, const fai
 }
 
 Case cases[] = {
-//        Case("Trackle Storage test mesurements full-0", TestMeasurementStorageFull, greentea_failure_handler),
-        Case("Trackle Storage test settings write new-0", TestSettingsWriteStorage, greentea_failure_handler),
 
+        Case("Trackle Storage test mesurements load-0", TestMeasurementLoadMeasurement, greentea_failure_handler),
+//        Case("Trackle Storage test mesurements full-0", TestMeasurementStorageFull, greentea_failure_handler),
+//        Case("Trackle Storage test settings store new-0", TestSettingsWriteStorage, greentea_failure_handler),
+//        Case("Trackle Storage test settings load new-0", TestSettingsLoadStorage, greentea_failure_handler),
 };
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {

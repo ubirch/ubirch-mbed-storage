@@ -1,0 +1,10 @@
+{
+  "daplink_url": "http://www.mbed.com/",
+  "mount_point": "/media/wowa/JLINK",
+  "platform_name": "NRF52_DK",
+  "platform_name_unique": "NRF52_DK",
+  "serial_port": "/dev/ttyACM0",
+  "target_id": "000682711979",
+  "target_id_mbed_htm": "000682711979",
+  "target_id_usb_id": "000682711979"
+}

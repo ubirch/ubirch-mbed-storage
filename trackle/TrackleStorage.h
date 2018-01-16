@@ -39,6 +39,13 @@
 #define SETTING_MAGIC_NUMBER_VALID      (uint32_t) 0xC927EDFF
 #define SETTINGS_MAGIC_NUMBER_INVALID   (uint32_t) 0xC927ED00
 
+#define OWN_KEY_MAGIC_NUMBER_VALID       (uint32_t) 0x99CFAADF
+#define OWN_KEY_MAGIC_NUMBER_INVALID     (uint32_t) 0x99CFAAD0
+
+#define FOREIGN_KEY_MAGIC_NUMBER_VALID   (uint32_t) 0xDDEFBBDF
+#define FOREIGN_KEY_MAGIC_NUMBER_INVALID (uint32_t) 0xDDEFBBD0
+
+
 /**
  * The storage description of our measurements.
  */
@@ -85,6 +92,7 @@ const Settings EMPTYSETTINGS = {
 
 struct CryptoKey {
     uint32_t magicNumber;   //!< magic number for version control
+    uint16_t length;        //!< length of the CryptoKey struct
     uint8_t privateKey[32]; //!< private key array 32 Bytes
     uint8_t publicKey[32];  //!< public key array
     uint32_t validFrom;     //!< date from which the key is valid
@@ -116,9 +124,10 @@ public:
     /*!
      * Constructor for inherited object.
      */
-    TrackleStorage() : NRF52FlashStorage(), measCounter(0), pageOffsetMeas(2), pageOffsetSettings(1) {
-        measOffset = pageOffsetMeas * PAGE_SIZE_BYTES;
-        settingsOffset = pageOffsetSettings * PAGE_SIZE_BYTES;
+    TrackleStorage() : NRF52FlashStorage(), measCounter(0), measPageOffset(2), settingsPageOffset(1) {
+        measAddressOffset = measPageOffset * PAGE_SIZE_BYTES;
+        settingsAddressOffset = settingsPageOffset * PAGE_SIZE_BYTES;
+        settingsCurrentLocation = 0;
     }
 
     /*!
@@ -144,10 +153,10 @@ public:
 
     /*!
      * Load the measured data from given address.
-     * @param address / number of stored data
+     * @param counter / number of stored data
      * @return measurement entry
      */
-    Entry loadMeas(int address = 0);
+    Entry loadMeas(int counter = 0);
 
     /*!
      * Check if the given address is empty.
@@ -186,19 +195,13 @@ public:
      */
     bool eraseSettings();
 
-    /*!
-     * Replace the current settings in the storage
-     * @param settings complete struct of settings
-     * @return true, if successful, else false
-     */
-    bool replaceSettings(Settings settings);
-
     uint32_t scanSettings();
 
 
+    CryptoKey loadKeys();
+
     bool storeKeys();
 
-    bool loadKeys();
 
     bool eraseKeys();
 
@@ -209,13 +212,15 @@ protected:
 
     unsigned int measCounter;
 
-    unsigned int measOffset;
+    unsigned int measAddressOffset;
 
-    unsigned int pageOffsetMeas;
+    unsigned int measPageOffset;
 
-    unsigned int settingsOffset;
+    unsigned int settingsAddressOffset;
 
-    unsigned int pageOffsetSettings;
+    unsigned int settingsPageOffset;
+
+    uint32_t settingsCurrentLocation;
 
 };
 
