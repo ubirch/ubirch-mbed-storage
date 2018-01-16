@@ -4,11 +4,15 @@
  * @author  Waldemar Gruenwald
  * @version V1.0.0
  * @date    23 October 2017
- * @brief   key-storage class implementation
+ * @brief   flash-storage class implementation
  *
  * @update 	V1.0.1
  * 			08 August 2017
  * 			error handling and debug
+ *
+ * @update  V1.0.2
+ *          18 January 2018
+ *          reduced memory footprint and added no softdevice functionality
  ******************************************************************************
  *
  * Copyright 2016 ubirch GmbH (https://ubirch.com)
@@ -29,14 +33,15 @@
  */
 
 /**
- *  For more information about the key-storage,
+ *  For more information about the flash-storage,
  *  see documentation for mbed fstorage
  */
 #include "FlashStorage.h"
 #include <nrf_soc.h>
 #include <BLE.h>
-#include <EventQueue.h>
+//#include <EventQueue.h>
 #include <nrf52_bitfields.h>
+//#include <fstorage.h>
 #include "NRF52FlashStorage.h"
 
 #include "mbed.h"
@@ -79,7 +84,9 @@ FS_REGISTER_CFG(fs_config_t fs_config) =
 
 // adapted from an example found here:
 // https://devzone.nordicsemi.com/question/54763/sd_flash_write-implementation-without-softdevice/
-static fs_ret_t nosd_erase_page(const uint32_t *page_address, uint32_t num_pages) {
+fs_ret_t NRF52FlashStorage::nosd_erase_page(const fs_config_t *p_config,
+                                            const uint32_t *page_address,
+                                            uint32_t num_pages) {
     if (page_address == NULL) {
         return FS_ERR_NULL_ARG;
     }
@@ -90,8 +97,8 @@ static fs_ret_t nosd_erase_page(const uint32_t *page_address, uint32_t num_pages
     }
 
     // Check that the operation doesn't go outside the client's memory boundaries.
-    if ((page_address < fs_config.p_start_addr) ||
-        (page_address + (PAGE_SIZE_WORDS * num_pages) > fs_config.p_end_addr)) {
+    if ((page_address < p_config->p_start_addr) ||
+        (page_address + (PAGE_SIZE_WORDS * num_pages) > p_config->p_end_addr)) {
         return FS_ERR_INVALID_ADDR;
     }
 
@@ -127,7 +134,10 @@ static fs_ret_t nosd_erase_page(const uint32_t *page_address, uint32_t num_pages
 }
 
 
-static fs_ret_t nosd_store(uint32_t *p_dest, uint32_t *p_src, uint32_t size) {
+fs_ret_t NRF52FlashStorage::nosd_store(const fs_config_t *p_config,
+                                       uint32_t *p_dest,
+                                       uint32_t *p_src,
+                                       uint32_t size) {
     if ((p_src == NULL) || (p_dest == NULL)) {
         return FS_ERR_NULL_ARG;
     }
@@ -139,8 +149,8 @@ static fs_ret_t nosd_store(uint32_t *p_dest, uint32_t *p_src, uint32_t size) {
     }
 
     // Check that the operation doesn't go outside the client's memory boundaries.
-    if ((fs_config.p_start_addr > p_dest) ||
-        (fs_config.p_end_addr < (p_dest + size))) {
+    if ((p_config->p_start_addr > p_dest) ||
+        (p_config->p_end_addr < (p_dest + size))) {
         return FS_ERR_INVALID_ADDR;
     }
 
@@ -193,7 +203,9 @@ bool NRF52FlashStorage::init() {
 }
 
 
-bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uint16_t length8) {
+bool NRF52FlashStorage::readData(uint32_t p_location,
+                                 unsigned char *buffer,
+                                 uint16_t length8) {
     if (buffer == NULL || length8 == 0) {
         return false;
     }
@@ -209,7 +221,9 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
 
     uint16_t length32 = lengthReal >> 2;
     uint32_t buf32[length32];
-    PRINTF("Data read from flash address 0x%X (%d words)\r\n", (uint32_t) (fs_config.p_start_addr) + locationReal, length32);
+    PRINTF("Data read from flash address 0x%X (%d words)\r\n",
+           (uint32_t) (fs_config.p_start_addr) + locationReal,
+           length32);
     for (uint16_t i = 0; i < length32; i++) {
         buf32[i] = *(fs_config.p_start_addr + (locationReal >> 2) + i);
 //        PRINTF("(%u)[0x%X] = %X", i, ((uint32_t) fs_config.p_start_addr + (locationReal >> 2) + i), buf32[i]);
@@ -232,15 +246,20 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
 
 bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
     // Erase one page (page 0).
-    PRINTF("flash erase 0x%X\r\n", (uint32_t) (fs_config.p_start_addr + (PAGE_SIZE_WORDS * page)));
+    PRINTF("flash erase 0x%X\r\n",
+           (uint32_t) (fs_config.p_start_addr + (PAGE_SIZE_WORDS * page)));
 
     fs_ret_t ret;
     if (softdevice_handler_isEnabled()) {
         fs_callback_flag = 1;
-        ret = fs_erase(&fs_config, fs_config.p_start_addr + (PAGE_SIZE_WORDS * page), numPages);
+        ret = fs_erase(&fs_config,
+                       fs_config.p_start_addr + (PAGE_SIZE_WORDS * page),
+                       numPages);
         while (fs_callback_flag == 1) /* do nothing */ ;
     } else {
-        ret = nosd_erase_page(fs_config.p_start_addr + (PAGE_SIZE_WORDS * page), numPages);
+        ret = nosd_erase_page(&fs_config,
+                              fs_config.p_start_addr + (PAGE_SIZE_WORDS * page),
+                              numPages);
     }
 
     if (ret != FS_SUCCESS) {
@@ -254,7 +273,9 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
 }
 
 
-bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buffer, uint16_t length8) {
+bool NRF52FlashStorage::writeData(uint32_t p_location,
+                                  const unsigned char *buffer,
+                                  uint16_t length8) {
     if (buffer == NULL || length8 == 0) {
         PRINTF("ERROR NULL  \r\n");
         return false;
@@ -270,21 +291,24 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
     }
 
     PRINTF("write start=0x%08x, address=0x%08x (offset=%08x, real=0x%08x)\r\n",
-           (uint32_t) fs_config.p_start_addr, ((uint32_t) fs_config.p_start_addr) + locationReal, p_location,
+           (uint32_t) fs_config.p_start_addr,
+           ((uint32_t) fs_config.p_start_addr) + locationReal,
+           p_location,
            locationReal);
 
-    unsigned char bufferReal[lengthReal];
-
     // check, if there is already data in the buffer
-    this->readData(locationReal, bufferReal, lengthReal);
-    for (int i = preLength; i < (preLength + length8); ++i) {
-        if (bufferReal[i] != 0xFF) {
+    unsigned char buffer8[1];
+    for (int index = 0; index < length8; index++) {
+        this->readData((p_location + index), buffer8, sizeof(uint8_t));
+        if (buffer8[0] != 0xFF) {
             PRINTF("ERROR FLASH NOT EMPTY \r\n");
             return false;
         }
     }
+
+    unsigned char bufferReal[lengthReal];
     // shift the data in the buffer to the right location
-    // and fill the reminding bytes with 0xFF to not overwrite existing data in the memory
+    // and fill the remaining bytes with 0xFF to not overwrite existing data in the memory
     for (int j = 0; j < preLength; j++) {
         bufferReal[j] = 0xFF;
     }
@@ -303,23 +327,20 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
         return false;            // ERROR
     }
 
-    //Write the buffer into flash
-//    PRINTF("Writing data to addr =[0x%X], num =[0x%x], data =[0x ", ((uint32_t) fs_config.p_start_addr) + locationReal,
-//           lengthReal);
-//    for (int m = 0; m < length32; m++) {
-//        PRINTF(" %X", buf32[m]);
-//    }
-//    PRINTF("]\r\n");
-
     fs_ret_t ret;
     if (softdevice_handler_isEnabled()) {
 
         fs_callback_flag = 1;
-        ret = fs_store(&fs_config, (fs_config.p_start_addr + (locationReal >> 2)), buf32,
+        ret = fs_store(&fs_config,
+                       (fs_config.p_start_addr + (locationReal >> 2)),
+                       buf32,
                        length32);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
         while (fs_callback_flag == 1) /* do nothing */;
     } else {
-        ret = nosd_store((uint32_t *) (fs_config.p_start_addr + (locationReal >> 2)), buf32, length32);
+        ret = nosd_store(&fs_config,
+                         (uint32_t *) (fs_config.p_start_addr + (locationReal >> 2)),
+                         buf32,
+                         length32);
     }
 
     if (ret != FS_SUCCESS) {
