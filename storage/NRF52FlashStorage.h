@@ -53,18 +53,9 @@ extern "C" {
 #define PAGE_SIZE_WORDS 1024
 #endif
 
-
-/** Interface for secure flash storage access via key storage
- *
- * @code
- * #include "key-storage.h"
- *
- * TODO write example code , convert to C++ class!
- *
- *
- * @endcode
+/**
+ * Flash storage for Nordic nRF52.
  */
-
 class NRF52FlashStorage : public FlashStorage {
 
 public:
@@ -72,7 +63,7 @@ public:
     /*!
      * @brief   Constructor
      */
-    NRF52FlashStorage() { activatedSdStatus = false; };
+    NRF52FlashStorage() {};
 
     /*!
      * @brief   Destructor
@@ -131,30 +122,8 @@ public:
      * @return  end address
      */
     uint32_t getEndAddress();
-
-protected:
-
-    /*!
-     * Initialize the Softdevice, if it is not initialized yet.
-     * Calling this function if Softdevice is enabled will not reinitialize the Softdevice, but return.
-     *
-     * @return  BLE_ERROR_NONE, if successful
-     */
-    ble_error_t initBleSd();
-
-    /*!
-     * Deinitialize the Softdevice, if previously it was explicitly initialized by initBleSd(). If not,
-     * this function will return without doing anything.
-     */
-    void deinitBleSd();
-
-    /*!
-     * Status of explicit Softdevice activation for Storage purposes.
-     */
-    bool activatedSdStatus = false;
-
-
 };
+
 #ifdef __cplusplus
 }
 #endif

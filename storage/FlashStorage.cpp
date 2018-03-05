@@ -36,10 +36,6 @@
 #include "FlashStorage.h"
 #include <nrf_soc.h>
 
-
-// TODO, maybe separate the storage into two different storages, for secure and not secure data
-
-
 bool FlashStorage::conv8to32(const unsigned char *d8, uint32_t *d32, uint16_t length8){
     if (d8 == NULL || d32 == NULL || length8 == 0) {
         return false;

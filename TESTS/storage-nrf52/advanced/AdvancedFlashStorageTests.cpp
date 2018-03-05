@@ -104,7 +104,6 @@ int main() {
     NRF_CLOCK->TASKS_HFCLKSTART = 1;
 
     //Make sure HFCLK is on
-    //TODO use a while loop and reset module if it fails to init HFCLK
     for (int i = 0; i < 5; i++) {
         if (NRF_CLOCK->EVENTS_HFCLKSTARTED) {
             break;
