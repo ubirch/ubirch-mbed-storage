@@ -39,12 +39,8 @@
 #include "FlashStorage.h"
 #include <nrf_soc.h>
 #include <BLE.h>
-//#include <EventQueue.h>
 #include <nrf52_bitfields.h>
-//#include <fstorage.h>
 #include "NRF52FlashStorage.h"
-
-#include "mbed.h"
 
 extern "C" {
 #include <softdevice_handler.h>
@@ -74,11 +70,11 @@ inline static void fs_evt_handler(fs_evt_t const *const evt, fs_ret_t result) {
  */
 FS_REGISTER_CFG(fs_config_t fs_config) =
         {
-                .p_start_addr = 0,                // DUMMY
-                .p_end_addr = (const uint32_t *) PAGE_SIZE_WORDS,    // DUMMY
-                .callback  = fs_evt_handler, // Function for event callbacks.
-                .num_pages = STORAGE_PAGES,      // Number of physical flash pages required.
-                .priority  = 0xFE            // Priority for flash usage. // TODO check priority
+                .p_start_addr = 0,                                  // DUMMY
+                .p_end_addr = (const uint32_t *) PAGE_SIZE_WORDS,   // DUMMY
+                .callback  = fs_evt_handler,                        // Function for event callbacks.
+                .num_pages = STORAGE_PAGES,                         // Number of physical flash pages required.
+                .priority  = 0xFE                                   // Priority for flash usage.
         };
 
 

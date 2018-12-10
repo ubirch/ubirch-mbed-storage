@@ -154,7 +154,7 @@ void TestStorageWriteFailOnUsedFlash() {
                              "failed to read from storage");
     TEST_ASSERT_EQUAL_HEX32_MESSAGE(writeData, readData, "data read does not match written data");
 
-    // TODO: apparently, the 1 bits not yet zero will be zeroes by the second write
+    // apparently, the 1 bits not yet zero will be zeroes by the second write
 }
 
 void TestStorageWriteNonAligned() {
@@ -162,8 +162,6 @@ void TestStorageWriteNonAligned() {
     const uint32_t writeData = 0xA1B2C3D4;
     uint32_t readData = 0x000000;
 
-    // TODO: the lib automatically aligned the address on 4 byte (address * 4)!!
-//    TEST_ASSERT_MESSAGE(false, "the lib auto-alignes, so this test is not possible!")
     TEST_ASSERT_TRUE_MESSAGE(flashStorage.writeData(0x75, (const unsigned char *) &writeData, sizeof(writeData)),
                              "failed to write to storage");
     TEST_ASSERT_TRUE_MESSAGE(flashStorage.readData(0x75, (unsigned char *) &readData, sizeof(writeData)),

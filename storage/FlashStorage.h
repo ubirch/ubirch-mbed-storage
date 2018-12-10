@@ -42,20 +42,9 @@ extern "C" {
 #include <fstorage.h>
 }
 
-/** Interface for secure flash storage access via key storage
- *
- * @code
- * #include "key-storage.h"
- *
- * TODO write example code , convert to C++ class!
- *
- *
- * @endcode
+/**
+ * A flash storage abstraction.
  */
-
-
-
-
 class FlashStorage {
 
 public:
@@ -65,7 +54,7 @@ public:
      */
      FlashStorage() {};
 
-    /*!
+    virtual /*!
      * @brief   Destructor
      */
      ~FlashStorage() {};

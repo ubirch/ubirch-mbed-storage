@@ -57,18 +57,9 @@ extern "C" {
 #define PAGE_SIZE_WORDS 1024
 #endif
 
-
-/** Interface for secure flash storage access via key storage
- *
- * @code
- * #include "key-storage.h"
- *
- * TODO write example code , convert to C++ class!
- *
- *
- * @endcode
+/**
+ * Flash storage for Nordic nRF52.
  */
-
 class NRF52FlashStorage : public FlashStorage {
 
 public:
@@ -139,7 +130,7 @@ public:
      * @return  end address
      */
     uint32_t getEndAddress();
-
+  
 protected:
 
     /*!
@@ -169,8 +160,8 @@ protected:
                                uint32_t *p_dest,
                                uint32_t *p_src,
                                uint32_t size);
-
 };
+
 #ifdef __cplusplus
 }
 #endif
