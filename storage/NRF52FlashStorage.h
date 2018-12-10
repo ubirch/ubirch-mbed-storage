@@ -1,14 +1,18 @@
 /**
  ******************************************************************************
- * @file    FlashStorage.cpp
+ * @file    FlashStorage.h
  * @author  Waldemar Gruenwald
  * @version V1.0.0
  * @date    20 July 2017
- * @brief   key-storage class implementation
+ * @brief   flash-storage class implementation header
  *
  * @update 	V1.0.1
  * 			08 August 2017
  * 			error handling and debug
+ *
+ * @update  V1.0.2
+ *          18 January 2018
+ *          reduced memory footprint and added no softdevice functionality
  ******************************************************************************
  * @attention
  *
@@ -89,7 +93,9 @@ public:
      *
      * @return int 			true, if reading successful, else false
      */
-    bool readData(uint32_t p_location, unsigned char *buffer, uint16_t length8);
+    bool readData(uint32_t p_location,
+                  unsigned char *buffer,
+                  uint16_t length8);
 
     /*!
      * Erase a page in the key storage
@@ -107,7 +113,9 @@ public:
      *
      * @return 			    true, if writing successful, else false
      */
-    bool writeData(uint32_t p_location, const unsigned char *buffer, uint16_t length8);
+    bool writeData(uint32_t p_location,
+                   const unsigned char *buffer,
+                   uint16_t length8);
 
     /*!
      * Get the start address of the storage.
@@ -122,6 +130,36 @@ public:
      * @return  end address
      */
     uint32_t getEndAddress();
+  
+protected:
+
+    /*!
+     * Erase flash storage page without using the Sofdevice.
+     *
+     * @param p_config      Pointer to Storage configuration
+     * @param page_address  address of the page to be erased
+     * @param num_pages     number of pages to erase
+     *
+     * @return fs_ret_t     fstorage return value, = FS_SUCCESS if successful
+     */
+    static fs_ret_t nosd_erase_page(const fs_config_t *p_config,
+                                    const uint32_t *page_address,
+                                    uint32_t num_pages);
+
+    /*!
+     * Store data into flash storage without using the Softdevice.
+     *
+     * @param p_config      pointer to storage configuration
+     * @param p_dest        pointer to destination of data
+     * @param p_src         pointer to source of data
+     * @param size          size in 32 bit values
+     *
+     * @return fs_ret_t     fstorage return value, = FS_SUCCESS if successful
+     */
+    static fs_ret_t nosd_store(const fs_config_t *p_config,
+                               uint32_t *p_dest,
+                               uint32_t *p_src,
+                               uint32_t size);
 };
 
 #ifdef __cplusplus

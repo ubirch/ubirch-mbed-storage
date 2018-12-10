@@ -46,19 +46,19 @@ utest::v1::status_t greentea_failure_handler(const Case *const source, const fai
 }
 
 Case cases[] = {
-        Case("Storage test storage",
+        Case("Storage [SD] test storage",
              TestStorage, greentea_failure_handler),
-        Case("Storage test storage write subsequent bytes",
+        Case("Storage [SD] test storage write subsequent bytes",
              TestStorageWriteSubsequentBytes, greentea_failure_handler),
-        Case("Storage test storage write byte above end address",
+        Case("Storage [SD] test storage write byte above end address",
              TestStorageWriteAboveEndAddress, greentea_failure_handler),
-        Case("Storage test storage write buffer over page boarder",
+        Case("Storage [SD] test storage write buffer over page boarder",
              TestStorageWriteOverPageBoarder, greentea_failure_handler),
-        Case("Storage test storage write big buffer",
+        Case("Storage [SD] test storage write big buffer",
              TestStorageWriteBigBuffer, greentea_failure_handler),
-        Case("Storage test storage erase pages",
+        Case("Storage [SD] test storage erase pages",
              TestStorageErasePages, greentea_failure_handler),
-        Case("Storage test storage write over the upper bound",
+        Case("Storage [SD] test storage write over the upper bound",
              TestStorageWriteOverUpperBound, greentea_failure_handler),
 
 };

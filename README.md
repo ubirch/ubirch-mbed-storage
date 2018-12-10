@@ -33,51 +33,51 @@ Current Status:
 +------------------+---------------+-----------------------------------+--------+--------------------+-------------+
 | target           | platform_name | test suite                        | result | elapsed_time (sec) | copy_method |
 +------------------+---------------+-----------------------------------+--------+--------------------+-------------+
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | OK     | 23.73              | default     |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | OK     | 25.62              | default     |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | OK     | 21.35              | default     |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | OK     | 21.82              | default     |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-nosd          | OK     | 18.18              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | OK     | 36.78              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | OK     | 30.84              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | OK     | 30.14              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | OK     | 32.74              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-nosd          | OK     | 25.12              | default     |
 +------------------+---------------+-----------------------------------+--------+--------------------+-------------+
 mbedgt: test suite results: 5 OK
 mbedgt: test case report:
 +------------------+---------------+-----------------------------------+------------------------------------------------------------+--------+--------+--------+--------------------+
 | target           | platform_name | test suite                        | test case                                                  | passed | failed | result | elapsed_time (sec) |
 +------------------+---------------+-----------------------------------+------------------------------------------------------------+--------+--------+--------+--------------------+
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage test storage                                       | 2      | 0      | OK     | 0.06               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage test storage erase pages                           | 1      | 0      | OK     | 0.65               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage test storage write big buffer                      | 1      | 0      | OK     | 0.08               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage test storage write buffer over page boarder        | 1      | 0      | OK     | 0.09               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage test storage write byte above end address          | 1      | 0      | OK     | 0.14               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage test storage write over the upper bound            | 1      | 0      | OK     | 0.08               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage test storage write subsequent bytes                | 1      | 0      | OK     | 2.19               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage                                | 2      | 0      | OK     | 0.05               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage erase pages                    | 1      | 0      | OK     | 0.62               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage [SD] test storage                                  | 2      | 0      | OK     | 0.05               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage [SD] test storage erase pages                      | 1      | 0      | OK     | 0.22               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage [SD] test storage write big buffer                 | 1      | 0      | OK     | 0.08               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage [SD] test storage write buffer over page boarder   | 1      | 0      | OK     | 0.09               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage [SD] test storage write byte above end address     | 1      | 0      | OK     | 0.15               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage [SD] test storage write over the upper bound       | 1      | 0      | OK     | 0.08               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced      | Storage [SD] test storage write subsequent bytes           | 1      | 0      | OK     | 2.22               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage                                | 2      | 0      | OK     | 0.06               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage erase pages                    | 1      | 0      | OK     | 0.21               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage write big buffer               | 1      | 0      | OK     | 0.09               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage write buffer over page boarder | 1      | 0      | OK     | 0.09               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage write buffer over page boarder | 1      | 0      | OK     | 0.08               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage write byte above end address   | 1      | 0      | OK     | 0.14               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage write over the upper bound     | 1      | 0      | OK     | 0.09               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage write subsequent bytes         | 1      | 0      | OK     | 2.2                |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write 1.5 words                  | 1      | 0      | OK     | 0.08               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage write over the upper bound     | 1      | 0      | OK     | 0.08               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-advanced-nosd | Storage [noSD] test storage write subsequent bytes         | 1      | 0      | OK     | 2.23               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write 1.5 words                  | 1      | 0      | OK     | 0.07               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write 2 words                    | 1      | 0      | OK     | 0.07               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write 3 byte                     | 1      | 0      | OK     | 0.07               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write buffer                     | 1      | 0      | OK     | 0.08               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write buffer                     | 1      | 0      | OK     | 0.06               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write byte                       | 1      | 0      | OK     | 0.07               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write existing fails             | 1      | 0      | OK     | 0.08               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write half word                  | 1      | 0      | OK     | 0.07               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write non-aligned                | 1      | 0      | OK     | 0.06               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write word                       | 1      | 0      | OK     | 0.06               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write 1.5 words                | 1      | 0      | OK     | 0.08               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write non-aligned                | 1      | 0      | OK     | 0.07               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic         | Storage [SD] test storage write word                       | 1      | 0      | OK     | 0.07               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write 1.5 words                | 1      | 0      | OK     | 0.07               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write 2 words                  | 1      | 0      | OK     | 0.07               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write 3 byte                   | 1      | 0      | OK     | 0.06               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write buffer                   | 1      | 0      | OK     | 0.08               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write byte                     | 1      | 0      | OK     | 0.08               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write existing fails           | 1      | 0      | OK     | 0.07               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write half word                | 1      | 0      | OK     | 0.07               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write buffer                   | 1      | 0      | OK     | 0.07               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write byte                     | 1      | 0      | OK     | 0.07               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write existing fails           | 1      | 0      | OK     | 0.08               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write half word                | 1      | 0      | OK     | 0.08               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write non-aligned              | 1      | 0      | OK     | 0.07               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write word                     | 1      | 0      | OK     | 0.06               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-nosd          | Storage [nosd] test write page                             | 1      | 0      | OK     | 0.16               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-nosd          | Storage [nosd] test write simple                           | 1      | 0      | OK     | 0.08               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-basic-nosd    | Storage [noSD] test storage write word                     | 1      | 0      | OK     | 0.07               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-nosd          | Storage [nosd] test write page                             | 1      | 0      | OK     | 0.17               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-storage-nrf52-nosd          | Storage [nosd] test write simple                           | 1      | 0      | OK     | 0.06               |
 +------------------+---------------+-----------------------------------+------------------------------------------------------------+--------+--------+--------+--------------------+
 mbedgt: test case results: 34 OK
 ```
