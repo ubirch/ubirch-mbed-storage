@@ -39,7 +39,7 @@
 #include <cstdio>
 
 extern "C" {
-#include <fstorage.h>
+#include <nrf_fstorage.h>
 }
 
 /**

@@ -37,13 +37,14 @@
 #ifndef UBIRCH_MBED_NRF52_STORAGE_NRF52FLASHSTORAGE_H
 #define UBIRCH_MBED_NRF52_STORAGE_NRF52FLASHSTORAGE_H
 
+#include <FlashStorage.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <fstorage.h>
+#include <nrf_fstorage.h>
 #include <blecommon.h>
-#include "FlashStorage.h"
 
 #ifndef STORAGE_PAGES
 #define STORAGE_PAGES 4
