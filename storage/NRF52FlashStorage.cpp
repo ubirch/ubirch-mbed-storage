@@ -227,8 +227,9 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
 
     ret_code_t ret;
     ret = nrf_fstorage_read(&nrfFstorage, p_location, buffer, length8);
+
     if (ret != NRF_SUCCESS) {
-        return false;
+        PRINTF("    fstorage READ ERROR    \r\n");
     } else {
         /* The operation was accepted.
          * Upon completion, the NRF_FSTORAGE_READ_RESULT event
@@ -237,7 +238,8 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
         fs_callback_flag = 1;
         while (fs_callback_flag == 1) /* do nothing */ ;
     }
-    return true;
+
+    return ret == NRF_SUCCESS;
 }
 
 
@@ -246,18 +248,18 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
     PRINTF("flash erase 0x%X\r\n", (uint32_t) (nrfFstorage.p_start_addr + (PAGE_SIZE_WORDS * page)));
 
     ret_code_t ret;
-    if (softdevice_handler_isEnabled()) {
-        fs_callback_flag = 1;
-        ret = fs_erase(&nrfFstorage, nrfFstorage.p_start_addr + (PAGE_SIZE_WORDS * page), numPages);
-        while (fs_callback_flag == 1) /* do nothing */ ;
-    } else {
-        ret = nosd_erase_page(nrfFstorage.p_start_addr + (PAGE_SIZE_WORDS * page), numPages);
-    }
+    ret = nrf_fstorage_erase(&nrfFstorage, nrfFstorage.start_addr + (PAGE_SIZE_WORDS * page), numPages, NULL);
 
     if (ret != NRF_SUCCESS) {
         PRINTF("    fstorage ERASE ERROR    \r\n");
-        return false;
     } else {
+        /*
+         * The operation was accepted.
+         * Upon completion, the NRF_FSTORAGE_ERASE_RESULT event
+         * is sent to the callback function registered by the instance.
+        */
+        fs_callback_flag = 1;
+        while (fs_callback_flag == 1) /* do nothing */ ;
         PRINTF("    fstorage ERASE successful    \r\n");
     }
 
