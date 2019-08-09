@@ -87,8 +87,8 @@ static ret_code_t nosd_erase_page(const uint32_t *page_address, uint32_t num_pag
     }
 
     // Check that the operation doesn't go outside the client's memory boundaries.
-    if ((page_address < nrfFstorage.p_start_addr) ||
-        (page_address + (PAGE_SIZE_WORDS * num_pages) > nrfFstorage.p_end_addr)) {
+    if ((page_address < nrfFstorage.start_addr) ||
+        (page_address + (PAGE_SIZE_WORDS * num_pages) > nrfFstorage.end_addr)) {
         return FS_ERR_INVALID_ADDR;
     }
 
@@ -136,8 +136,8 @@ static ret_code_t nosd_store(uint32_t *p_dest, uint32_t *p_src, uint32_t size) {
     }
 
     // Check that the operation doesn't go outside the client's memory boundaries.
-    if ((nrfFstorage.p_start_addr > p_dest) ||
-        (nrfFstorage.p_end_addr < (p_dest + size))) {
+    if ((nrfFstorage.start_addr > p_dest) ||
+        (nrfFstorage.end_addr < (p_dest + size))) {
         return FS_ERR_INVALID_ADDR;
     }
 
@@ -190,64 +190,66 @@ bool NRF52FlashStorage::init() {
 }
 
 bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uint16_t length8) {
-//    if (buffer == NULL || length8 == 0) {
-//        return false;
-//    }
-//
-//    // determine the real location alligned to 32bit (4Byte) values
-//    uint8_t preLength = (uint8_t) (p_location % 4);
-//    uint32_t locationReal = p_location - preLength;
-//    // determine the required length, considering the preLength
-//    uint16_t lengthReal = (uint16_t) (length8 + preLength);
-//    if (lengthReal % 4) {
-//        lengthReal += 4 - (lengthReal % 4);
-//    }
-//
-//    uint16_t length32 = lengthReal >> 2;
-//    uint32_t buf32[length32];
-//    PRINTF("Data read from flash address 0x%X (%d words)\r\n", (uint32_t) (&nrfFstorage.start_addr) + locationReal,
-//           length32);
-//    for (uint16_t i = 0; i < length32; i++) {
-//        buf32[i] = *(&nrfFstorage.start_addr + (locationReal >> 2) + i);  //TODO &nrfFstorage.start_addr? Is this right?
-////        PRINTF("(%u)[0x%X] = %X", i, ((uint32_t) nrfFstorage.p_start_addr + (locationReal >> 2) + i), buf32[i]);
-//    }
-////    PRINTF("\r\n");
-//
-//    // create a new buffer, to fill all the data and convert the data into it
-//    unsigned char bufferReal[lengthReal];
-//    if (!conv32to8(buf32, bufferReal, lengthReal)) {
-//        return false;            // ERROR
-//    }
-//
-//    // shift the data to the right position
-//    for (int j = 0; j < length8; j++) {
-//        buffer[j] = bufferReal[j + preLength];
-//    }
-//    return true;
-
-    ret_code_t ret;
-    ret = nrf_fstorage_read(&nrfFstorage, p_location, buffer, length8);
-
-    if (ret != NRF_SUCCESS) {
-        PRINTF("    fstorage READ ERROR    \r\n");
-    } else {
-        /* The operation was accepted.
-         * Upon completion, the NRF_FSTORAGE_READ_RESULT event
-         * is sent to the callback function registered by the instance.
-        */
-        fs_callback_flag = 1;
-        while (fs_callback_flag == 1) /* do nothing */ ;
+    if (buffer == NULL || length8 == 0) {
+        return false;
     }
 
-    return ret == NRF_SUCCESS;
+    // determine the real location alligned to 32bit (4Byte) values
+    uint8_t preLength = (uint8_t) (p_location % 4);
+    uint32_t locationReal = p_location - preLength;
+    // determine the required length, considering the preLength
+    uint16_t lengthReal = (uint16_t) (length8 + preLength);
+    if (lengthReal % 4) {
+        lengthReal += 4 - (lengthReal % 4);
+    }
+
+    uint16_t length32 = lengthReal >> 2;
+    uint32_t buf32[length32];
+    PRINTF("Data read from flash address 0x%X (%d words)\r\n", (uint32_t) (&nrfFstorage.start_addr) + locationReal,
+           length32);
+    for (uint16_t i = 0; i < length32; i++) {
+        buf32[i] = *(&nrfFstorage.start_addr + (locationReal >> 2) + i);  //TODO &nrfFstorage.start_addr? Is this right?
+        PRINTF("(%u)[0x%X] = %X", i, ((uint32_t) nrfFstorage.start_addr + (locationReal >> 2) + i), buf32[i]);
+    }
+    PRINTF("\r\n");
+
+    // create a new buffer, to fill all the data and convert the data into it
+    unsigned char bufferReal[lengthReal];
+    if (!conv32to8(buf32, bufferReal, lengthReal)) {
+        return false;            // ERROR
+    }
+
+    // shift the data to the right position
+    for (int j = 0; j < length8; j++) {
+        buffer[j] = bufferReal[j + preLength];
+    }
+    return true;
+
+//    ret_code_t ret;
+//    fs_callback_flag = 1;
+//    ret = nrf_fstorage_read(&nrfFstorage, p_location, buffer, length8);
+//
+//    if (ret != NRF_SUCCESS) {
+//        PRINTF("    fstorage READ ERROR    \r\n");
+//    } else {
+//        /* The operation was accepted.
+//         * Upon completion, the NRF_FSTORAGE_READ_RESULT event
+//         * is sent to the callback function registered by the instance.
+//        */
+//        while (fs_callback_flag == 1) /* do nothing */ ;
+//    }
+//
+//    return ret == NRF_SUCCESS;
 }
 
 
 bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
     // Erase one page (page 0).
-    PRINTF("flash erase 0x%X\r\n", (uint32_t) (nrfFstorage.p_start_addr + (PAGE_SIZE_WORDS * page)));
+    PRINTF("flash erase 0x%X\r\n", (uint32_t) (nrfFstorage.start_addr + (PAGE_SIZE_WORDS * page)));
 
     ret_code_t ret;
+    fs_callback_flag = 1;
+
     ret = nrf_fstorage_erase(&nrfFstorage, nrfFstorage.start_addr + (PAGE_SIZE_WORDS * page), numPages, NULL);
 
     if (ret != NRF_SUCCESS) {
@@ -258,7 +260,6 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
          * Upon completion, the NRF_FSTORAGE_ERASE_RESULT event
          * is sent to the callback function registered by the instance.
         */
-        fs_callback_flag = 1;
         while (fs_callback_flag == 1) /* do nothing */ ;
         PRINTF("    fstorage ERASE successful    \r\n");
     }
@@ -317,28 +318,29 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
     }
 
     //Write the buffer into flash
-//    PRINTF("Writing data to addr =[0x%X], num =[0x%x], data =[0x ", ((uint32_t) nrfFstorage.p_start_addr) + locationReal,
-//           lengthReal);
-//    for (int m = 0; m < length32; m++) {
-//        PRINTF(" %X", buf32[m]);
-//    }
-//    PRINTF("]\r\n");
+    PRINTF("Writing data to addr =[0x%X], num =[0x%x], data =[0x ", ((uint32_t) nrfFstorage.start_addr) + locationReal,
+           lengthReal);
+    for (int m = 0; m < length32; m++) {
+        PRINTF(" %X", buf32[m]);
+    }
+    PRINTF("]\r\n");
 
     ret_code_t ret;
-    if (softdevice_handler_isEnabled()) {
+    fs_callback_flag = 1;
 
-        fs_callback_flag = 1;
-        ret = fs_store(&nrfFstorage, (nrfFstorage.p_start_addr + (locationReal >> 2)), buf32,
-                       length32);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
-        while (fs_callback_flag == 1) /* do nothing */;
-    } else {
-        ret = nosd_store((uint32_t *) (nrfFstorage.p_start_addr + (locationReal >> 2)), buf32, length32);
-    }
+    ret = nrf_fstorage_write(&nrfFstorage, (nrfFstorage.start_addr + (locationReal >> 2)), buf32,
+                             length32,
+                             NULL);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
 
     if (ret != NRF_SUCCESS) {
         PRINTF("    fstorage WRITE ERROR    \r\n");
-        return false;
     } else {
+        /*
+         * The operation was accepted.
+         * Upon completion, the NRF_FSTORAGE_WRITE_RESULT event
+         * is sent to the callback function registered by the instance.
+        */
+        while (fs_callback_flag == 1) /* do nothing */ ;
         PRINTF("    fstorage WRITE successful    \r\n");
     }
 
@@ -346,10 +348,10 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
 }
 
 uint32_t NRF52FlashStorage::getStartAddress() {
-    return (uint32_t) (nrfFstorage.p_start_addr);
+    return (uint32_t) (nrfFstorage.start_addr);
 }
 
 uint32_t NRF52FlashStorage::getEndAddress() {
-    return (uint32_t) (nrfFstorage.p_end_addr);
+    return (uint32_t) (nrfFstorage.end_addr);
 }
 
