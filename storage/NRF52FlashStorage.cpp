@@ -32,18 +32,17 @@
  *  For more information about the key-storage,
  *  see documentation for mbed fstorage
  */
+
+#include <nrf_fstorage_nvmc.h>
 #include "FlashStorage.h"
 #include <nrf_soc.h>
 #include <BLE.h>
 #include "NRF52FlashStorage.h"
 
-extern "C" {
-#include <softdevice_handler.h>
-}
-
-
 #define PRINTF(...)
 //#define PRINTF printf
+
+
 
 /*
 * flag for the callback, used to determine, when event handling is finished
@@ -51,9 +50,11 @@ extern "C" {
 */
 static volatile uint8_t fs_callback_flag;
 
-inline static void fs_evt_handler(fs_evt_t const *const evt, fs_ret_t result) {
-    (void) evt;
-    if (result != FS_SUCCESS) {
+/*
+ * callback function
+ */
+inline static void nrf_fstorage_evt_handler(nrf_fstorage_evt_t *p_evt) {
+    if (p_evt->result != NRF_SUCCESS) {
         PRINTF("    fstorage event handler ERROR   \r\n");
     } else {
         fs_callback_flag = 0;
@@ -63,19 +64,19 @@ inline static void fs_evt_handler(fs_evt_t const *const evt, fs_ret_t result) {
 /*
  * set the configuration
  */
-FS_REGISTER_CFG(fs_config_t fs_config) =
+NRF_FSTORAGE_DEF(nrf_fstorage_t fs_config) =
         {
-                .p_start_addr = 0,                                  // DUMMY
-                .p_end_addr = (const uint32_t *) PAGE_SIZE_WORDS,   // DUMMY
-                .callback  = fs_evt_handler,                        // Function for event callbacks.
-                .num_pages = STORAGE_PAGES,                         // Number of physical flash pages required.
-                .priority  = 0xFE                                   // Priority for flash usage.
+                .evt_handler    = nrf_fstorage_evt_handler,
+                .start_addr     = 0,
+                .end_addr       = PAGE_SIZE_WORDS,
+                // .p_api and .p_flash_info set through init()
+
         };
 
 
 // adapted from an example found here:
 // https://devzone.nordicsemi.com/question/54763/sd_flash_write-implementation-without-softdevice/
-static fs_ret_t nosd_erase_page(const uint32_t *page_address, uint32_t num_pages) {
+static ret_code_t nosd_erase_page(const uint32_t *page_address, uint32_t num_pages) {
     if (page_address == NULL) {
         return FS_ERR_NULL_ARG;
     }
@@ -119,11 +120,11 @@ static fs_ret_t nosd_erase_page(const uint32_t *page_address, uint32_t num_pages
         page_address += NRF_FICR->CODEPAGESIZE / sizeof(uint32_t *);
 
     }
-    return FS_SUCCESS;
+    return NRF_SUCCESS;
 }
 
 
-static fs_ret_t nosd_store(uint32_t *p_dest, uint32_t *p_src, uint32_t size) {
+static ret_code_t nosd_store(uint32_t *p_dest, uint32_t *p_src, uint32_t size) {
     if ((p_src == NULL) || (p_dest == NULL)) {
         return FS_ERR_NULL_ARG;
     }
@@ -170,7 +171,7 @@ static fs_ret_t nosd_store(uint32_t *p_dest, uint32_t *p_src, uint32_t size) {
         p_dest++;
     }
 
-    return FS_SUCCESS;
+    return NRF_SUCCESS;
 }
 
 
@@ -178,8 +179,8 @@ bool NRF52FlashStorage::init() {
     /*
      * initialize the storage and check for success
      */
-    fs_ret_t ret = fs_init();
-    if (ret != FS_SUCCESS) {
+    ret_code_t ret = nrf_fstorage_init(&fs_config, &nrf_fstorage_nvmc, NULL);
+    if (ret != NRF_SUCCESS) {
         PRINTF("    fstorage INITIALIZATION ERROR    \r\n");
         return false;
     } else {
@@ -187,7 +188,6 @@ bool NRF52FlashStorage::init() {
         return true;
     }
 }
-
 
 bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uint16_t length8) {
     if (buffer == NULL || length8 == 0) {
@@ -230,7 +230,7 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
     // Erase one page (page 0).
     PRINTF("flash erase 0x%X\r\n", (uint32_t) (fs_config.p_start_addr + (PAGE_SIZE_WORDS * page)));
 
-    fs_ret_t ret;
+    ret_code_t ret;
     if (softdevice_handler_isEnabled()) {
         fs_callback_flag = 1;
         ret = fs_erase(&fs_config, fs_config.p_start_addr + (PAGE_SIZE_WORDS * page), numPages);
@@ -239,14 +239,14 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
         ret = nosd_erase_page(fs_config.p_start_addr + (PAGE_SIZE_WORDS * page), numPages);
     }
 
-    if (ret != FS_SUCCESS) {
+    if (ret != NRF_SUCCESS) {
         PRINTF("    fstorage ERASE ERROR    \r\n");
         return false;
     } else {
         PRINTF("    fstorage ERASE successful    \r\n");
     }
 
-    return ret == FS_SUCCESS;
+    return ret == NRF_SUCCESS;
 }
 
 
@@ -307,7 +307,7 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
 //    }
 //    PRINTF("]\r\n");
 
-    fs_ret_t ret;
+    ret_code_t ret;
     if (softdevice_handler_isEnabled()) {
 
         fs_callback_flag = 1;
@@ -318,14 +318,14 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
         ret = nosd_store((uint32_t *) (fs_config.p_start_addr + (locationReal >> 2)), buf32, length32);
     }
 
-    if (ret != FS_SUCCESS) {
+    if (ret != NRF_SUCCESS) {
         PRINTF("    fstorage WRITE ERROR    \r\n");
         return false;
     } else {
         PRINTF("    fstorage WRITE successful    \r\n");
     }
 
-    return ret == FS_SUCCESS;
+    return ret == NRF_SUCCESS;
 }
 
 uint32_t NRF52FlashStorage::getStartAddress() {

@@ -38,10 +38,6 @@
 
 #include <cstdio>
 
-extern "C" {
-#include <nrf_fstorage.h>
-}
-
 /**
  * A flash storage abstraction.
  */
