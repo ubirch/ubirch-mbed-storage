@@ -195,7 +195,13 @@ bool NRF52FlashStorage::init() {
     /*
      * initialize the storage and check for success
      */
+#ifdef SOFTDEVICE_PRESENT
+    // initialize fstorage instance with API implementation of fstorage that uses the SoftDevice.
+    ret_code_t ret = nrf_fstorage_init(&nrfFstorage, &nrf_fstorage_sd, NULL);
+#else
+    // initialize fstorage instance with API implementation of fstorage that uses the non-volatile memory controller (NVMC).
     ret_code_t ret = nrf_fstorage_init(&nrfFstorage, &nrf_fstorage_nvmc, NULL);
+#endif
     if (ret != NRF_SUCCESS) {
         PRINTF("    fstorage INITIALIZATION ERROR    \r\n");
         return false;
@@ -222,11 +228,11 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
 
     uint16_t length32 = lengthReal >> 2;
     uint32_t buf32[length32];
-    PRINTF("Data read from flash address 0x%X (%d words)\r\n", (&nrfFstorage.start_addr) + locationReal,
+    PRINTF("Data read from flash address 0x%X (%d words)\r\n", (nrfFstorage.start_addr) + locationReal,
            length32);
     for (uint16_t i = 0; i < length32; i++) {
-        buf32[i] = *(&nrfFstorage.start_addr + (locationReal >> 2) + i);
-        PRINTF("(%u)[0x%X] = %X", i, (&nrfFstorage.start_addr + (locationReal >> 2) + i), buf32[i]);
+        buf32[i] = (nrfFstorage.start_addr + (locationReal >> 2) + i);
+        PRINTF("(%u)[0x%X] = %X", i, (nrfFstorage.start_addr + (locationReal >> 2) + i), buf32[i]);
     }
     PRINTF("\r\n");
 
@@ -272,7 +278,6 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
     fs_erasePage_callback_flag = 1;
 
     ret = nrf_fstorage_erase(&nrfFstorage, nrfFstorage.start_addr + (PAGE_SIZE_WORDS * page), numPages, NULL);
-
     if (ret != NRF_SUCCESS) {
         PRINTF("    fstorage ERASE ERROR    \r\n");
     } else {
@@ -350,7 +355,7 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
     fs_writeData_callback_flag = 1;
 
     ret = nrf_fstorage_write(&nrfFstorage, (nrfFstorage.start_addr + (locationReal >> 2)), buf32, length32,
-                             NULL);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
+                             NULL);       //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
 
     if (ret != NRF_SUCCESS) {
         PRINTF("    fstorage WRITE ERROR    \r\n");
