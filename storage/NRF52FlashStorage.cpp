@@ -42,8 +42,6 @@
 #define PRINTF(...)
 //#define PRINTF printf
 
-
-
 /*
 * flag for the callback, used to determine, when event handling is finished
 * so the rest of the program can continue
@@ -53,7 +51,7 @@ static volatile uint8_t fs_callback_flag;
 /*
  * callback function
  */
-inline static void nrf_fstorage_evt_handler(nrf_fstorage_evt_t *p_evt) {
+inline static void fstorage_evt_handler(nrf_fstorage_evt_t *p_evt) {
     if (p_evt->result != NRF_SUCCESS) {
         PRINTF("    fstorage event handler ERROR   \r\n");
     } else {
@@ -64,13 +62,16 @@ inline static void nrf_fstorage_evt_handler(nrf_fstorage_evt_t *p_evt) {
 /*
  * set the configuration
  */
+nrf_fstorage_info_t *flash_info;
+struct nrf_fstorage_api_s *api;
+
 NRF_FSTORAGE_DEF(nrf_fstorage_t nrfFstorage) =
         {
-                .evt_handler    = nrf_fstorage_evt_handler,
-                .start_addr     = 0,
-                .end_addr       = PAGE_SIZE_WORDS,
-                // .p_api and .p_flash_info set through init()
-
+                .p_api = api,
+                .p_flash_info = flash_info,
+                .evt_handler =  fstorage_evt_handler,
+                .start_addr =  0,
+                .end_addr =  PAGE_SIZE_WORDS,
         };
 
 
@@ -78,22 +79,22 @@ NRF_FSTORAGE_DEF(nrf_fstorage_t nrfFstorage) =
 // https://devzone.nordicsemi.com/question/54763/sd_flash_write-implementation-without-softdevice/
 static ret_code_t nosd_erase_page(const uint32_t *page_address, uint32_t num_pages) {
     if (page_address == NULL) {
-        return FS_ERR_NULL_ARG;
+        return NRF_ERROR_NULL;
     }
 
     // Check that the page is aligned to a page boundary.
     if (((uint32_t) page_address % NRF_FICR->CODEPAGESIZE) != 0) {
-        return FS_ERR_UNALIGNED_ADDR;
+        return NRF_ERROR_INVALID_ADDR;
     }
 
     // Check that the operation doesn't go outside the client's memory boundaries.
-    if ((page_address < nrfFstorage.start_addr) ||
-        (page_address + (PAGE_SIZE_WORDS * num_pages) > nrfFstorage.end_addr)) {
-        return FS_ERR_INVALID_ADDR;
+    if ((page_address < &nrfFstorage.start_addr) ||
+        (page_address + (PAGE_SIZE_WORDS * num_pages) > &nrfFstorage.end_addr)) {
+        return NRF_ERROR_INVALID_ADDR;
     }
 
     if (num_pages == 0) {
-        return FS_ERR_INVALID_ARG;
+        return NRF_ERROR_INVALID_LENGTH;
     }
 
     for (uint8_t i = 0; i < num_pages; i++) {
@@ -126,23 +127,23 @@ static ret_code_t nosd_erase_page(const uint32_t *page_address, uint32_t num_pag
 
 static ret_code_t nosd_store(uint32_t *p_dest, uint32_t *p_src, uint32_t size) {
     if ((p_src == NULL) || (p_dest == NULL)) {
-        return FS_ERR_NULL_ARG;
+        return NRF_ERROR_NULL;
     }
 
     // Check that both pointers are word aligned.
     if (((uint32_t) p_src & 0x03) ||
         ((uint32_t) p_dest & 0x03)) {
-        return FS_ERR_UNALIGNED_ADDR;
+        return NRF_ERROR_INVALID_ADDR;
     }
 
     // Check that the operation doesn't go outside the client's memory boundaries.
-    if ((nrfFstorage.start_addr > p_dest) ||
-        (nrfFstorage.end_addr < (p_dest + size))) {
-        return FS_ERR_INVALID_ADDR;
+    if ((&nrfFstorage.start_addr > p_dest) ||
+        (&nrfFstorage.end_addr < (p_dest + size))) {
+        return NRF_ERROR_INVALID_ADDR;
     }
 
     if (size == 0) {
-        return FS_ERR_INVALID_ARG;
+        return NRF_ERROR_INVALID_LENGTH;
     }
 
     PRINTF("NOSD STORE 0x%08x (%d words)\r\n", (unsigned int) p_dest, size);
@@ -189,6 +190,7 @@ bool NRF52FlashStorage::init() {
     }
 }
 
+
 bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uint16_t length8) {
     if (buffer == NULL || length8 == 0) {
         return false;
@@ -205,11 +207,11 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
 
     uint16_t length32 = lengthReal >> 2;
     uint32_t buf32[length32];
-    PRINTF("Data read from flash address 0x%X (%d words)\r\n", (uint32_t) (&nrfFstorage.start_addr) + locationReal,
+    PRINTF("Data read from flash address 0x%X (%d words)\r\n", (&nrfFstorage.start_addr) + locationReal,
            length32);
     for (uint16_t i = 0; i < length32; i++) {
-        buf32[i] = *(&nrfFstorage.start_addr + (locationReal >> 2) + i);  //TODO &nrfFstorage.start_addr? Is this right?
-        PRINTF("(%u)[0x%X] = %X", i, ((uint32_t) nrfFstorage.start_addr + (locationReal >> 2) + i), buf32[i]);
+        buf32[i] = *(&nrfFstorage.start_addr + (locationReal >> 2) + i);
+        PRINTF("(%u)[0x%X] = %X", i, (&nrfFstorage.start_addr + (locationReal >> 2) + i), buf32[i]);
     }
     PRINTF("\r\n");
 
@@ -245,7 +247,7 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
 
 bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
     // Erase one page (page 0).
-    PRINTF("flash erase 0x%X\r\n", (uint32_t) (nrfFstorage.start_addr + (PAGE_SIZE_WORDS * page)));
+    PRINTF("flash erase 0x%X\r\n", (nrfFstorage.start_addr + (PAGE_SIZE_WORDS * page)));
 
     ret_code_t ret;
     fs_callback_flag = 1;
@@ -284,7 +286,7 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
     }
 
     PRINTF("write start=0x%08x, address=0x%08x (offset=%08x, real=0x%08x)\r\n",
-           (uint32_t) nrfFstorage.p_start_addr, ((uint32_t) nrfFstorage.p_start_addr) + locationReal, p_location,
+           nrfFstorage.start_addr, (nrfFstorage.start_addr) + locationReal, p_location,
            locationReal);
 
     unsigned char bufferReal[lengthReal];
@@ -318,7 +320,7 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
     }
 
     //Write the buffer into flash
-    PRINTF("Writing data to addr =[0x%X], num =[0x%x], data =[0x ", ((uint32_t) nrfFstorage.start_addr) + locationReal,
+    PRINTF("Writing data to addr =[0x%X], num =[0x%x], data =[0x ", (nrfFstorage.start_addr) + locationReal,
            lengthReal);
     for (int m = 0; m < length32; m++) {
         PRINTF(" %X", buf32[m]);
@@ -328,8 +330,7 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
     ret_code_t ret;
     fs_callback_flag = 1;
 
-    ret = nrf_fstorage_write(&nrfFstorage, (nrfFstorage.start_addr + (locationReal >> 2)), buf32,
-                             length32,
+    ret = nrf_fstorage_write(&nrfFstorage, (nrfFstorage.start_addr + (locationReal >> 2)), buf32, length32,
                              NULL);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
 
     if (ret != NRF_SUCCESS) {
@@ -348,10 +349,10 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
 }
 
 uint32_t NRF52FlashStorage::getStartAddress() {
-    return (uint32_t) (nrfFstorage.start_addr);
+    return nrfFstorage.start_addr;
 }
 
 uint32_t NRF52FlashStorage::getEndAddress() {
-    return (uint32_t) (nrfFstorage.end_addr);
+    return nrfFstorage.end_addr;
 }
 
