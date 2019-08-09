@@ -205,9 +205,10 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
 
     uint16_t length32 = lengthReal >> 2;
     uint32_t buf32[length32];
-    PRINTF("Data read from flash address 0x%X (%d words)\r\n", (uint32_t) (fs_config.p_start_addr) + locationReal, length32);
+    PRINTF("Data read from flash address 0x%X (%d words)\r\n", (uint32_t) (&fs_config.start_addr) + locationReal,
+           length32);
     for (uint16_t i = 0; i < length32; i++) {
-        buf32[i] = *(fs_config.p_start_addr + (locationReal >> 2) + i);
+        buf32[i] = *(&fs_config.start_addr + (locationReal >> 2) + i);  //TODO Reference to start_addr? Is this right?
 //        PRINTF("(%u)[0x%X] = %X", i, ((uint32_t) fs_config.p_start_addr + (locationReal >> 2) + i), buf32[i]);
     }
 //    PRINTF("\r\n");
