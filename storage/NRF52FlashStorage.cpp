@@ -46,7 +46,9 @@
 * flag for the callback, used to determine, when event handling is finished
 * so the rest of the program can continue
 */
-static volatile uint8_t fs_callback_flag;
+//static volatile uint8_t fs_readData_callback_flag;
+static volatile uint8_t fs_writeData_callback_flag;
+static volatile uint8_t fs_erasePage_callback_flag;
 
 /*
  * callback function
@@ -55,20 +57,33 @@ inline static void fstorage_evt_handler(nrf_fstorage_evt_t *p_evt) {
     if (p_evt->result != NRF_SUCCESS) {
         PRINTF("    fstorage event handler ERROR   \r\n");
     } else {
-        fs_callback_flag = 0;
+        // TODO check for
+        nrf_fstorage_evt_id_t id;         //!< The event ID.
+        id = p_evt->id;
+        switch (id) {
+            case NRF_FSTORAGE_EVT_WRITE_RESULT:
+                fs_writeData_callback_flag = 0;
+                break;
+            case NRF_FSTORAGE_EVT_ERASE_RESULT:
+                fs_erasePage_callback_flag = 0;
+                break;
+//            default:
+//                /* this shouldn't happen */
+//                fs_readData_callback_flag = 0;
+        }
     }
 };
 
 /*
  * set the configuration
  */
-nrf_fstorage_info_t *flash_info;
+nrf_fstorage_info_t *flash_info;    // TODO should be membersof class
 struct nrf_fstorage_api_s *api;
 
 NRF_FSTORAGE_DEF(nrf_fstorage_t nrfFstorage) =
         {
-                .p_api = api,
-                .p_flash_info = flash_info,
+                .p_api = api,                   // initialization through nrf_fstorage_init()
+                .p_flash_info = flash_info,     // initialization through nrf_fstorage_init()
                 .evt_handler =  fstorage_evt_handler,
                 .start_addr =  0,
                 .end_addr =  PAGE_SIZE_WORDS,
@@ -227,8 +242,12 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
     }
     return true;
 
+    /* alternative implementation with nrf_fstorage_nvmc API
+     * see: https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.sdk5.v15.0.0%2Flib_fstorage.html
+     * */
+
 //    ret_code_t ret;
-//    fs_callback_flag = 1;
+//    fs_readData_callback_flag = 1;
 //    ret = nrf_fstorage_read(&nrfFstorage, p_location, buffer, length8);
 //
 //    if (ret != NRF_SUCCESS) {
@@ -238,7 +257,7 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
 //         * Upon completion, the NRF_FSTORAGE_READ_RESULT event
 //         * is sent to the callback function registered by the instance.
 //        */
-//        while (fs_callback_flag == 1) /* do nothing */ ;
+//        while (fs_readData_callback_flag == 1) /* do nothing */ ;
 //    }
 //
 //    return ret == NRF_SUCCESS;
@@ -250,7 +269,7 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
     PRINTF("flash erase 0x%X\r\n", (nrfFstorage.start_addr + (PAGE_SIZE_WORDS * page)));
 
     ret_code_t ret;
-    fs_callback_flag = 1;
+    fs_erasePage_callback_flag = 1;
 
     ret = nrf_fstorage_erase(&nrfFstorage, nrfFstorage.start_addr + (PAGE_SIZE_WORDS * page), numPages, NULL);
 
@@ -262,7 +281,7 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
          * Upon completion, the NRF_FSTORAGE_ERASE_RESULT event
          * is sent to the callback function registered by the instance.
         */
-        while (fs_callback_flag == 1) /* do nothing */ ;
+        while (fs_erasePage_callback_flag == 1) /* do nothing */ ;
         PRINTF("    fstorage ERASE successful    \r\n");
     }
 
@@ -328,7 +347,7 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
     PRINTF("]\r\n");
 
     ret_code_t ret;
-    fs_callback_flag = 1;
+    fs_writeData_callback_flag = 1;
 
     ret = nrf_fstorage_write(&nrfFstorage, (nrfFstorage.start_addr + (locationReal >> 2)), buf32, length32,
                              NULL);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
@@ -341,7 +360,7 @@ bool NRF52FlashStorage::writeData(uint32_t p_location, const unsigned char *buff
          * Upon completion, the NRF_FSTORAGE_WRITE_RESULT event
          * is sent to the callback function registered by the instance.
         */
-        while (fs_callback_flag == 1) /* do nothing */ ;
+        while (fs_writeData_callback_flag == 1) /* do nothing */ ;
         PRINTF("    fstorage WRITE successful    \r\n");
     }
 
