@@ -36,7 +36,6 @@
 #include <nrf_fstorage_nvmc.h>
 #include "FlashStorage.h"
 #include <nrf_soc.h>
-#include <BLE.h>
 #include "NRF52FlashStorage.h"
 
 #define PRINTF(...)
@@ -278,6 +277,7 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
     fs_erasePage_callback_flag = 1;
 
     ret = nrf_fstorage_erase(&nrfFstorage, nrfFstorage.start_addr + (PAGE_SIZE_WORDS * page), numPages, NULL);
+
     if (ret != NRF_SUCCESS) {
         PRINTF("    fstorage ERASE ERROR    \r\n");
     } else {
