@@ -32,10 +32,16 @@
  *  For more information about the key-storage,
  *  see documentation for mbed fstorage
  */
-
+#ifdef SOFTDEVICE_PRESENT
+#include "nrf_fstorage_sd.h"
+#else
 #include <nrf_fstorage_nvmc.h>
+
+#endif
+
 #include "FlashStorage.h"
 #include <nrf_soc.h>
+#include <edebug.h>
 #include "NRF52FlashStorage.h"
 
 #define PRINTF(...)
@@ -54,7 +60,7 @@ static volatile uint8_t fs_erasePage_callback_flag;
  */
 inline static void fstorage_evt_handler(nrf_fstorage_evt_t *p_evt) {
     if (p_evt->result != NRF_SUCCESS) {
-        PRINTF("    fstorage event handler ERROR   \r\n");
+        EDEBUG_PRINTF("    fstorage event handler ERROR   \r\n");
     } else {
         // TODO check for
         nrf_fstorage_evt_id_t id;         //!< The event ID.
@@ -66,9 +72,12 @@ inline static void fstorage_evt_handler(nrf_fstorage_evt_t *p_evt) {
             case NRF_FSTORAGE_EVT_ERASE_RESULT:
                 fs_erasePage_callback_flag = 0;
                 break;
-//            default:
-//                /* this shouldn't happen */
+            case NRF_FSTORAGE_EVT_READ_RESULT:
+                /* this shouldn't happen -> never called */
 //                fs_readData_callback_flag = 0;
+            default:
+                EDEBUG_PRINTF("UNDEFINED FSTORAGE CALLBACK EVENT\r\n");
+                break;
         }
     }
 };
@@ -247,7 +256,7 @@ bool NRF52FlashStorage::readData(uint32_t p_location, unsigned char *buffer, uin
     }
     return true;
 
-    /* alternative implementation with nrf_fstorage_nvmc API
+    /* alternative implementation with nrf_fstorage API
      * see: https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.sdk5.v15.0.0%2Flib_fstorage.html
      * */
 
