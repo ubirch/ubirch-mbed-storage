@@ -18,7 +18,7 @@ set(FEATURES frameworks)
 
 add_definitions(
         -DTOOLCHAIN_GCC
-        -DNRF52
+        -DNRF5
         -D${MCU}
         -DTARGET_${TARGET}
         -DTARGET_${BOARD}

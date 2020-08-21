@@ -246,11 +246,15 @@ bool NRF52FlashStorage::erasePage(uint8_t page, uint8_t numPages) {
            (uint32_t) (fs_config.p_start_addr + (PAGE_SIZE_WORDS * page)));
 
     fs_ret_t ret;
+#ifdef NRF52
     if (softdevice_handler_isEnabled()) {
         fs_callback_flag = 1;
-        ret = fs_erase(&fs_config,
-                       fs_config.p_start_addr + (PAGE_SIZE_WORDS * page),
-                       numPages);
+        ret = fs_erase(&fs_config, fs_config.p_start_addr + (PAGE_SIZE_WORDS * page), numPages);
+#elif NRF52840_XXAA
+	if (softdevice_handler_is_enabled()) {
+		fs_callback_flag = 1;
+		ret = fs_erase(&fs_config, fs_config.p_start_addr + (PAGE_SIZE_WORDS * page), numPages, NULL);
+#endif
         while (fs_callback_flag == 1) /* do nothing */ ;
     } else {
         ret = nosd_erase_page(&fs_config,
@@ -324,6 +328,7 @@ bool NRF52FlashStorage::writeData(uint32_t p_location,
     }
 
     fs_ret_t ret;
+#ifdef NRF52
     if (softdevice_handler_isEnabled()) {
 
         fs_callback_flag = 1;
@@ -331,6 +336,13 @@ bool NRF52FlashStorage::writeData(uint32_t p_location,
                        (fs_config.p_start_addr + (locationReal >> 2)),
                        buf32,
                        length32);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
+#elif NRF52840_XXAA
+	if (softdevice_handler_is_enabled()) {
+
+		fs_callback_flag = 1;
+		ret = fs_store(&fs_config, (fs_config.p_start_addr + (locationReal >> 2)), buf32,
+		               length32, NULL);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
+#endif
         while (fs_callback_flag == 1) /* do nothing */;
     } else {
         ret = nosd_store(&fs_config,

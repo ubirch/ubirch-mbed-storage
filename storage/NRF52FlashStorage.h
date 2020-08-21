@@ -53,9 +53,9 @@ extern "C" {
 #define STORAGE_PAGES 4
 #endif
 
-#if defined (NRF52)
+//#if defined (NRF5)
 #define PAGE_SIZE_WORDS 1024
-#endif
+//#endif
 
 /**
  * Flash storage for Nordic nRF52.
